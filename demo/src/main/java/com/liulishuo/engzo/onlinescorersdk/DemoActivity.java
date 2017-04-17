@@ -12,11 +12,15 @@ import android.widget.Toast;
 import com.liulishuo.engzo.onlinescorer.OnlineScorerRecorder;
 import com.liulishuo.engzo.onlinescorer.ReadLoudExercise;
 
+import java.io.File;
+
 /**
  * Created by wcw on 4/11/17.
  */
 
 public class DemoActivity extends AppCompatActivity {
+
+    private String errorFilePath;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -51,19 +55,36 @@ public class DemoActivity extends AppCompatActivity {
                     Toast.makeText(DemoActivity.this, "录音出错\n" + Log.getStackTraceString(error),
                             Toast.LENGTH_SHORT).show();
                 }
-                recordBtn.setText("start");
+                if (errorFilePath != null) {
+                    recordBtn.setText("retry");
+                } else {
+                    recordBtn.setText("start");
+                }
             }
         });
 
         // 录音处理完成的回调，开发者可以监听该回调，获取打分报告与录音文件
         onlineScorerRecorder.setOnProcessStopListener(new OnlineScorerRecorder.OnProcessStopListener() {
+
             @Override
             public void onProcessStop(Throwable error, String filePath, String report) {
-                //
                 if (error != null) {
+                    // 当异常为 ScorerException 可以把 filePath 存下来拿来 retry
+                    if (error instanceof OnlineScorerRecorder.ScorerException) {
+                        errorFilePath = "/sdcard/retry.wav";
+                        boolean renameSuccess = new File(filePath).renameTo(new File(errorFilePath));
+                        if (renameSuccess) {
+                            recordBtn.setText("retry");
+                            return;
+                        }
+                    }
+                    errorFilePath = null;
+                    recordBtn.setText("start");
                     resultView.setText(Log.getStackTraceString(error));
-                } else{
+                } else {
+                    errorFilePath = null;
                     resultView.setText(String.format("filePath = %s\n report = %s", filePath, report));
+                    recordBtn.setText("start");
                 }
             }
         });
@@ -76,8 +97,13 @@ public class DemoActivity extends AppCompatActivity {
                     if (onlineScorerRecorder.isRecording()) {
                         onlineScorerRecorder.stopRecord();
                     } else {
-                        // need get permission
-                        onlineScorerRecorder.startRecord();
+                        // 当 errorFilePath 不为空时，可以将该文件作为录音文件传入
+                        if (errorFilePath != null) {
+                            onlineScorerRecorder.startRecord(errorFilePath);
+                        } else {
+                            // need get record permission
+                            onlineScorerRecorder.startRecord();
+                        }
                         resultView.setText("");
                         recordBtn.setText("stop");
                     }
