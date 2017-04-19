@@ -15,7 +15,7 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
-        maven { url 'https://dl.bintray.com/wangcongwu123/maven/' }
+        maven { url 'https://oss.jfrog.org/artifactory/libs-snapshot/' }
     }
 }
 

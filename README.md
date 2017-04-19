@@ -10,11 +10,34 @@ Android 版在线打分 sdk 支持对 readLoud 题型进行打分，录音过程
 ## gradle 添加依赖
 
 ```
-maven { url 'https://dl.bintray.com/wangcongwu123/maven/' }
-
+// release aar deploy on jcenter
 compile('com.liulishuo.engzo:online-scorer:1.0.0@aar') {
     transitive = true
 }
+
+// snapshot aar deploy on oss.jfrog.org
+
+// PROJECT_ROOT/build.gradle
+allprojects {
+    repositories {
+        jcenter()
+        maven { url 'https://oss.jfrog.org/artifactory/libs-snapshot/' }
+    }
+}
+
+// PROJECT_ROOT/demo/build.gradle
+configurations.all {
+    // check for updates every build
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+dependencies {
+    compile ('com.liulishuo.engzo:online-scorer:1.1.0-SNAPSHOT@aar') {
+        transitive = true
+        changing = true
+    }
+}
+
 ```
 
 ## api level 支持
