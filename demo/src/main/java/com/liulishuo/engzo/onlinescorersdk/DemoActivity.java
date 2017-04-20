@@ -21,6 +21,13 @@ import java.io.File;
 public class DemoActivity extends AppCompatActivity {
 
     private String errorFilePath;
+    private OnlineScorerRecorder onlineScorerRecorder;
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        onlineScorerRecorder.stopRecord();
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -45,7 +52,7 @@ public class DemoActivity extends AppCompatActivity {
         readLoudExercise.setQuality(8);
 
         // 创建打分录音器
-        final OnlineScorerRecorder onlineScorerRecorder = new OnlineScorerRecorder(appId, appSecret, readLoudExercise, "/sdcard/test.wav");
+        onlineScorerRecorder = new OnlineScorerRecorder(appId, appSecret, readLoudExercise, "/sdcard/test.wav");
 
         // 录音完成的回调，开发者可以用这个监听录音的完成，在里头一般做更新录音按钮状态的操作
         onlineScorerRecorder.setOnRecordStopListener(new OnlineScorerRecorder.OnRecordListener() {
