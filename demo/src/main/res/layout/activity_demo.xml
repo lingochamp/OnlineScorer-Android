@@ -6,13 +6,6 @@
     android:layout_height="match_parent"
     >
 
-    <Button
-        android:id="@+id/recordBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="startRecording" />
-
     <TextView
         android:id="@+id/titleView"
         android:layout_width="match_parent"
@@ -30,6 +23,13 @@
             android:layout_height="match_parent" />
 
     </ScrollView>
+
+    <Button
+        android:id="@+id/recordBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="startRecording" />
 
 
 </RelativeLayout>
