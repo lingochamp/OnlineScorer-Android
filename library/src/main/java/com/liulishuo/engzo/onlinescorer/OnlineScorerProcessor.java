@@ -12,7 +12,6 @@ import com.neovisionaries.ws.client.WebSocketFrame;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -48,8 +47,6 @@ public class OnlineScorerProcessor implements AudioProcessor {
 
     private BaseExercise exercise;
 
-    private FileOutputStream fileOutputStream;
-
     public OnlineScorerProcessor(String appId, String appSecret, BaseExercise exercise) {
         meta = generateMeta(appId, appSecret, exercise);
         this.exercise = exercise;
@@ -65,7 +62,6 @@ public class OnlineScorerProcessor implements AudioProcessor {
 
     @Override
     public void start() throws Exception {
-        fileOutputStream = new FileOutputStream("/sdcard/test.spx");
         if (encodeToSpeex) {
             encoder = new SpeexEncoder();
             pointer = encoder.init(exercise.getQuality());
@@ -88,7 +84,6 @@ public class OnlineScorerProcessor implements AudioProcessor {
                 buffer.order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(buf);
                 bytes = encoder.encode(pointer, frameSize, buf.length, buf);
             }
-            fileOutputStream.write(bytes);
             ws.sendBinary(bytes);
         }
     }
@@ -109,19 +104,10 @@ public class OnlineScorerProcessor implements AudioProcessor {
             LOG.d("OnlineScorerProcessor response timeout");
             throw new OnlineScorerRecorder.ScorerException(1, "response timeout");
         }
-        fileOutputStream.close();
-        fileOutputStream = null;
     }
 
     @Override
     public void release() {
-        if (fileOutputStream != null) {
-            try {
-                fileOutputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
         if (ws != null) {
             ws.disconnect();
             ws = null;
