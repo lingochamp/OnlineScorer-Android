@@ -23,6 +23,7 @@ void voice_encode_release(SpeexPointer speexPointer) {
     printf("enc release\n");
     speex_bits_destroy(&(speexPointer->ebits));
     speex_encoder_destroy(speexPointer->enc_state);
+    free(speexPointer);
 
 }
 //压缩语音流
