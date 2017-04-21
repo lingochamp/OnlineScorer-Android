@@ -61,12 +61,15 @@ public class OnlineScorerProcessor implements AudioProcessor {
     private SpeexEncoder encoder;
     private int frameSize;
 
+    private long pointer;
+
     @Override
     public void start() throws Exception {
         fileOutputStream = new FileOutputStream("/sdcard/test.spx");
         if (encodeToSpeex) {
             encoder = new SpeexEncoder();
-            frameSize = encoder.init(exercise.getQuality());
+            pointer = encoder.init(exercise.getQuality());
+            frameSize = encoder.getFrameSize(pointer);
         }
         ws = connect();
         byte[] metaArray = meta.getBytes("UTF-8");
@@ -83,7 +86,7 @@ public class OnlineScorerProcessor implements AudioProcessor {
                 ByteBuffer buffer = ByteBuffer.wrap(bytes);
                 short[] buf = new short[size / 2];
                 buffer.order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(buf);
-                bytes = encoder.encode(frameSize, buf.length, buf);
+                bytes = encoder.encode(pointer, frameSize, buf.length, buf);
             }
             fileOutputStream.write(bytes);
             ws.sendBinary(bytes);
@@ -125,7 +128,7 @@ public class OnlineScorerProcessor implements AudioProcessor {
         }
         if (encodeToSpeex) {
             if (encoder != null) {
-                encoder.release();
+                encoder.release(pointer);
                 encoder = null;
             }
         }

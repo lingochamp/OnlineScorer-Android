@@ -12,11 +12,11 @@ extern "C" {
  * Method:    init
  * Signature: ()V
  */
-JNIEXPORT jint JNICALL Java_com_liulishuo_jni_SpeexEncoder_init
+JNIEXPORT jlong JNICALL Java_com_liulishuo_jni_SpeexEncoder_init
   (JNIEnv *, jobject, jint);
 
-JNIEXPORT jint JNICALL Java_com_liulishuo_jni_SpeexEncoder_header
-        (JNIEnv *, jobject, jbyteArray);
+JNIEXPORT jint JNICALL Java_com_liulishuo_jni_SpeexEncoder_getFrameSize
+        (JNIEnv *, jobject, jlong);
 
 /*
  * Class:     com_liulishuo_jni_SpeexEncoder
@@ -24,7 +24,7 @@ JNIEXPORT jint JNICALL Java_com_liulishuo_jni_SpeexEncoder_header
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_com_liulishuo_jni_SpeexEncoder_release
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jlong);
 
 /*
  * Class:     com_liulishuo_jni_SpeexEncoder
@@ -32,7 +32,7 @@ JNIEXPORT void JNICALL Java_com_liulishuo_jni_SpeexEncoder_release
  * Signature: (I[S)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_com_liulishuo_jni_SpeexEncoder_encode
-  (JNIEnv *, jobject, jint, jint, jshortArray);
+  (JNIEnv *, jobject, jlong, jint, jint, jshortArray);
 
 #ifdef __cplusplus
 }
