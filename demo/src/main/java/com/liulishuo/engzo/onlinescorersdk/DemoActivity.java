@@ -81,6 +81,7 @@ public class DemoActivity extends AppCompatActivity {
                         errorFilePath = "/sdcard/retry.wav";
                         boolean renameSuccess = new File(filePath).renameTo(new File(errorFilePath));
                         if (renameSuccess) {
+                            resultView.setText(Log.getStackTraceString(error));
                             recordBtn.setText("retry");
                             return;
                         }
