@@ -6,13 +6,13 @@ package com.liulishuo.jni;
  */
 public class SpeexEncoder
 {
-    public native int init(int quality);
+    public native long init(int quality);
 
-    public native int header(byte[] buffer);
+    public native int getFrameSize(long pointer);
 
-    public native void release();
+    public native byte[] encode(long pointer, int frameSize, int sampleCount, short[] samples);
 
-    public native byte[] encode(int frameSize, int sampleCount, short[] samples);
+    public native void release(long pointer);
 
 
     static {

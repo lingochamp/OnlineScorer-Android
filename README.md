@@ -10,11 +10,34 @@ Android 版在线打分 sdk 支持对 readLoud 题型进行打分，录音过程
 ## gradle 添加依赖
 
 ```
-maven { url 'https://dl.bintray.com/wangcongwu123/maven/' }
-
-compile('com.liulishuo.engzo:online-scorer:1.0.0@aar') {
+// release aar deploy on jcenter
+compile('com.liulishuo.engzo:online-scorer:1.1.0@aar') {
     transitive = true
 }
+
+// snapshot aar deploy on oss.jfrog.org
+
+// PROJECT_ROOT/build.gradle
+allprojects {
+    repositories {
+        jcenter()
+        maven { url 'https://oss.jfrog.org/artifactory/libs-snapshot/' }
+    }
+}
+
+// PROJECT_ROOT/demo/build.gradle
+configurations.all {
+    // check for updates every build
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+dependencies {
+    compile ('com.liulishuo.engzo:online-scorer:1.1.0-SNAPSHOT@aar') {
+        transitive = true
+        changing = true
+    }
+}
+
 ```
 
 ## api level 支持
@@ -119,19 +142,21 @@ recordBtn.setOnClickListener(new View.OnClickListener() {
  可能会出现录音相关的异常，比如录音初始化错误，具体可查看权限是否获取
 
 
-
 ## onProcessStop
 
-主要包含 ScorerException 与其他异常，其中 ScorerException 是对 Server 返回 errorMessage 的封装，一般来说开发者只需要关心 ScorerException，其中 status code > 0 属于 client 端的异常，status code < 0 属于 server 端的异常
+主要包含 ScorerException 与其他异常，其中 ScorerException 是对 Server 返回 errorMessage 的封装，一般来说开发者只需要关心 ScorerException，其中 status code > 0 属于 client 端的异常，status code < 0 属于 server 端的异常。
+当出现 ScorerException 异常的时候可以将当前录音的 filePath 保存下来，供而后重试打分，具体可参考 demo 中的做法。
 
 ```
 
 /**
  * 0 - 成功
+ * 1 - 客户端 response timeout
  * -1 - 参数有误
  * -20 - 认证失败
  * -30 - 请求过于频繁
  * -31 - 余额不足
+ * -41 - 排队超时
  * -99 - 计算资源不可用
  */
 public static class ScorerException extends Exception {

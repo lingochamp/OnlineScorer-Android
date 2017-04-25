@@ -19,17 +19,14 @@
    * Method:    init
    * Signature: ()V
    */
-  JNIEXPORT jint JNICALL Java_com_liulishuo_jni_SpeexEncoder_init
+  JNIEXPORT jlong JNICALL Java_com_liulishuo_jni_SpeexEncoder_init
     (JNIEnv *env, jobject object, jint quality) {
       return voice_encode_init(quality);
     }
 
-  JNIEXPORT jint JNICALL Java_com_liulishuo_jni_SpeexEncoder_header
-            (JNIEnv *env, jobject object, jbyteArray buffer) {
-      char* output_frame = (*env)->GetByteArrayElements(env, buffer, 0);
-      int count = get_header(output_frame);
-      (*env)->ReleaseByteArrayElements(env, buffer, output_frame, 0);
-      return count;
+    JNIEXPORT jint JNICALL Java_com_liulishuo_jni_SpeexEncoder_getFrameSize
+        (JNIEnv *env, jobject object, jlong pointer) {
+        return get_enc_frame_size(pointer);
     }
 
   /*
@@ -38,8 +35,8 @@
    * Signature: ()V
    */
   JNIEXPORT void JNICALL Java_com_liulishuo_jni_SpeexEncoder_release
-    (JNIEnv *env, jobject object) {
-        voice_encode_release();
+    (JNIEnv *env, jobject object, jlong pointer) {
+        voice_encode_release(pointer);
     }
 
   /*
@@ -48,11 +45,11 @@
    * Signature: (I[S)[B
    */
   JNIEXPORT jbyteArray JNICALL Java_com_liulishuo_jni_SpeexEncoder_encode
-    (JNIEnv *env, jobject object, jint frameSize, jint readCount, jshortArray input_frame) {
+    (JNIEnv *env, jobject object, jlong pointer, jint frameSize, jint readCount, jshortArray input_frame) {
         short* in = (*env)->GetShortArrayElements(env, input_frame, 0);
 
         char encoded[readCount * 2];
-        int encoded_count = voice_encode(frameSize, in, readCount, encoded, readCount * 2);
+        int encoded_count = voice_encode(pointer, frameSize, in, readCount, encoded, readCount * 2);
 
         (*env)->ReleaseShortArrayElements(env, input_frame, in, 0);
 

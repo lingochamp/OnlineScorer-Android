@@ -3,7 +3,7 @@ apply plugin: 'com.android.library'
 ext {
     PUBLISH_GROUP_ID = 'com.liulishuo.engzo'
     PUBLISH_ARTIFACT_ID = 'online-scorer'
-    PUBLISH_VERSION = '1.0'
+    PUBLISH_VERSION = '1.1.0'
 }
 
 android {
@@ -40,7 +40,7 @@ dependencies {
     })
     testCompile 'junit:junit:4.12'
     compile 'com.neovisionaries:nv-websocket-client:1.31'
-    compile 'com.liulishuo.engzo:lingo-recorder:1.0'
+    compile 'com.liulishuo.engzo:lingo-recorder:1.1.0'
 }
 
 apply from: 'https://raw.githubusercontent.com/blundell/release-android-library/master/android-release-aar.gradle'

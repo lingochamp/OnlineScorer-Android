@@ -19,6 +19,11 @@ android {
     }
 }
 
+configurations.all {
+    // check for updates every build
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
@@ -30,7 +35,14 @@ dependencies {
 
     compile project(':library')
 
-//    compile ('com.liulishuo.engzo:online-scorer:1.0') {
+    // import release aar
+//    compile ('com.liulishuo.engzo:online-scorer:1.1.0@aar') {
 //        transitive = true
+//    }
+
+    // import snapshot aar
+//    compile ('com.liulishuo.engzo:online-scorer:1.1.0-SNAPSHOT@aar') {
+//        transitive = true
+//        changing = true
 //    }
 }

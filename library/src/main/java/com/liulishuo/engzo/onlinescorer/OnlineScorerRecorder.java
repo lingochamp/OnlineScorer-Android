@@ -76,8 +76,23 @@ public class OnlineScorerRecorder {
         });
     }
 
+    /**
+     * start recording from WavFileRecorder
+     * @param wavFilePath   Recorder read from wavFilePath
+     */
+    public void startRecord(String wavFilePath) {
+        if (isAvailable()) {
+            lingoRecorder.testFile(wavFilePath);
+            lingoRecorder.start();
+        }
+    }
+
+    /**
+     * start recording from android audioRecorder
+     */
     public void startRecord() {
         if (isAvailable()) {
+            lingoRecorder.testFile(null);
             lingoRecorder.start();
         }
     }
@@ -117,10 +132,12 @@ public class OnlineScorerRecorder {
 
     /**
      * 0 - 成功
+     * 1 - 客户端 response timeout
      * -1 - 参数有误
      * -20 - 认证失败
      * -30 - 请求过于频繁
      * -31 - 余额不足
+     * -41 - 排队超时
      * -99 - 计算资源不可用
      */
     public static class ScorerException extends Exception {

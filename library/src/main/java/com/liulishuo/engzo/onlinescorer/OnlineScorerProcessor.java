@@ -12,7 +12,6 @@ import com.neovisionaries.ws.client.WebSocketFrame;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -29,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 public class OnlineScorerProcessor implements AudioProcessor {
 
-    private static final String SERVER = "wss://rating.llsstaging.com/openapi/stream/upload";
+    private static final String SERVER = "wss://openapi.llsapp.com/openapi/stream/upload";
 
     /**
      * The timeout value in milliseconds for socket connection.
@@ -48,8 +47,6 @@ public class OnlineScorerProcessor implements AudioProcessor {
 
     private BaseExercise exercise;
 
-    private FileOutputStream fileOutputStream;
-
     public OnlineScorerProcessor(String appId, String appSecret, BaseExercise exercise) {
         meta = generateMeta(appId, appSecret, exercise);
         this.exercise = exercise;
@@ -61,12 +58,14 @@ public class OnlineScorerProcessor implements AudioProcessor {
     private SpeexEncoder encoder;
     private int frameSize;
 
+    private long pointer;
+
     @Override
     public void start() throws Exception {
-        fileOutputStream = new FileOutputStream("/sdcard/test.spx");
         if (encodeToSpeex) {
             encoder = new SpeexEncoder();
-            frameSize = encoder.init(exercise.getQuality());
+            pointer = encoder.init(exercise.getQuality());
+            frameSize = encoder.getFrameSize(pointer);
         }
         ws = connect();
         byte[] metaArray = meta.getBytes("UTF-8");
@@ -83,9 +82,8 @@ public class OnlineScorerProcessor implements AudioProcessor {
                 ByteBuffer buffer = ByteBuffer.wrap(bytes);
                 short[] buf = new short[size / 2];
                 buffer.order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(buf);
-                bytes = encoder.encode(frameSize, buf.length, buf);
+                bytes = encoder.encode(pointer, frameSize, buf.length, buf);
             }
-            fileOutputStream.write(bytes);
             ws.sendBinary(bytes);
         }
     }
@@ -106,26 +104,17 @@ public class OnlineScorerProcessor implements AudioProcessor {
             LOG.d("OnlineScorerProcessor response timeout");
             throw new OnlineScorerRecorder.ScorerException(1, "response timeout");
         }
-        fileOutputStream.close();
-        fileOutputStream = null;
     }
 
     @Override
     public void release() {
-        if (fileOutputStream != null) {
-            try {
-                fileOutputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
         if (ws != null) {
             ws.disconnect();
             ws = null;
         }
         if (encodeToSpeex) {
             if (encoder != null) {
-                encoder.release();
+                encoder.release(pointer);
                 encoder = null;
             }
         }
