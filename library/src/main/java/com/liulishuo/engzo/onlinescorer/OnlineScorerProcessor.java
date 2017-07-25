@@ -28,7 +28,9 @@ import java.util.concurrent.TimeUnit;
 
 public class OnlineScorerProcessor implements AudioProcessor {
 
-    private static final String SERVER = "wss://openapi.llsapp.com/openapi/stream/upload";
+    private static final String SERVER =
+            BuildConfig.DEBUG ? "wss://rating.llsstaging.com/openapi/stream/upload"
+                    : "wss://openapi.llsapp.com/openapi/stream/upload";
 
     /**
      * The timeout value in milliseconds for socket connection.
@@ -147,8 +149,6 @@ public class OnlineScorerProcessor implements AudioProcessor {
                         super.onError(websocket, cause);
                         LOG.d("OnlineScorerProcessor websocket error " + cause);
                     }
-
-                    @Override
                     public void onCloseFrame(WebSocket websocket, WebSocketFrame frame) throws Exception {
                         super.onCloseFrame(websocket, frame);
                         latch.countDown();

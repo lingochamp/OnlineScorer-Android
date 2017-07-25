@@ -42,8 +42,8 @@ public class DemoActivity extends AppCompatActivity {
         titleView.setText("请说 i will study english very hard");
 
         // 仅供测试用的 appId 和 appSecret
-        String appId = null;
-        String appSecret = null;
+        String appId = "test";
+        String appSecret = "test";
 
         if (appId == null || appSecret == null) {
             throw new RuntimeException("appId & appSecret should not be null");
