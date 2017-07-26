@@ -1,11 +1,13 @@
 package com.liulishuo.engzo.onlinescorer;
 
-import com.liulishuo.engzo.lingorecorder.processor.AudioProcessor;
+import android.annotation.SuppressLint;
+import android.util.Base64;
+
 import com.liulishuo.engzo.lingorecorder.LingoRecorder;
+import com.liulishuo.engzo.lingorecorder.processor.AudioProcessor;
 import com.liulishuo.engzo.lingorecorder.processor.WavProcessor;
 
 import org.json.JSONObject;
-import android.util.Base64;
 
 import java.util.Map;
 
@@ -51,17 +53,29 @@ public class OnlineScorerRecorder {
 
                             if (status == 0) {
                                 onProcessStopListener.onProcessStop(null, filePath, report);
+                                LogCollector.getInstance().d(
+                                        "process stop, filePath: " + filePath + " report: "
+                                                + report);
                             } else {
-                                onProcessStopListener.onProcessStop(
-                                        new ScorerException(status, errorMsg),
-                                        filePath, null);
+                                final ScorerException scorerException = new ScorerException(status,
+                                        errorMsg);
+                                onProcessStopListener.onProcessStop(scorerException, filePath,
+                                        null);
+                                LogCollector.getInstance().e(
+                                        "process stop " + scorerException.getMessage(),
+                                        scorerException);
                             }
                         } catch (Exception e) {
                             onProcessStopListener.onProcessStop(e, filePath, null);
+                            LogCollector.getInstance().e("process stop " + e.getMessage(), e);
                         }
                     } else {
                         onProcessStopListener.onProcessStop(throwable, filePath, null);
+                        LogCollector.getInstance().e("process stop " + throwable.getMessage(),
+                                throwable);
                     }
+                } else {
+                    LogCollector.getInstance().d("process stop, onProcessStopListener is null.");
                 }
             }
         });
@@ -71,6 +85,14 @@ public class OnlineScorerRecorder {
             public void onRecordStop(Throwable throwable) {
                 if (onRecordListener != null) {
                     onRecordListener.onRecordStop(throwable);
+                    if (throwable == null) {
+                        LogCollector.getInstance().d("stop record ");
+                    } else {
+                        LogCollector.getInstance().e("stop record " + throwable.getMessage(),
+                                throwable);
+                    }
+                } else {
+                    LogCollector.getInstance().d("stop record, onRecordListener is null.");
                 }
             }
         });
@@ -81,26 +103,33 @@ public class OnlineScorerRecorder {
      * @param wavFilePath   Recorder read from wavFilePath
      */
     public void startRecord(String wavFilePath) {
-        if (isAvailable()) {
+        final boolean available = isAvailable();
+        if (available) {
             lingoRecorder.testFile(wavFilePath);
             lingoRecorder.start();
         }
+        LogCollector.getInstance().d(
+                "start record, wavFilePath: " + wavFilePath + " available: " + available);
     }
 
     /**
      * start recording from android audioRecorder
      */
     public void startRecord() {
-        if (isAvailable()) {
+        final boolean available = isAvailable();
+        if (available) {
             lingoRecorder.testFile(null);
             lingoRecorder.start();
         }
+        LogCollector.getInstance().d("start record, available: " + available);
     }
 
     public void stopRecord() {
-        if (isAvailable()) {
+        final boolean available = isAvailable();
+        if (available) {
             lingoRecorder.stop();
         }
+        LogCollector.getInstance().d("stop record, available: " + available);
     }
 
     public boolean isRecording() {
@@ -144,7 +173,8 @@ public class OnlineScorerRecorder {
         private int status;
         private String msg;
 
-        public ScorerException(int status, String msg) {
+        @SuppressLint("DefaultLocale")
+        ScorerException(int status, String msg) {
             super(String.format("response error status = %d msg = %s", status, msg));
             this.status = status;
             this.msg = msg;

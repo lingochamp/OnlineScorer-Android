@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.liulishuo.engzo.onlinescorer.OnlineScorer;
 import com.liulishuo.engzo.onlinescorer.OnlineScorerRecorder;
 import com.liulishuo.engzo.onlinescorer.ReadLoudExercise;
 
@@ -42,14 +43,18 @@ public class DemoActivity extends AppCompatActivity {
         titleView.setText("请说 i will study english very hard");
 
         // 仅供测试用的 appId 和 appSecret
-        String appId = "test";
-        String appSecret = "test";
+        // staging account is test
+        String appId = null;
+        String appSecret = null;
 
         if (appId == null || appSecret == null) {
             throw new RuntimeException("appId & appSecret should not be null");
         }
 
-
+        // 进行在线打分器的初始化
+        OnlineScorer.init(this.getApplicationContext());
+        // 开启日志功能
+        OnlineScorer.setDebugEnable(true);
         // 创建 "i will study english very hard" 这句话的练习
         ReadLoudExercise readLoudExercise = new ReadLoudExercise();
         readLoudExercise.setReftext("i will study english very hard");
@@ -88,6 +93,7 @@ public class DemoActivity extends AppCompatActivity {
                         if (renameSuccess) {
                             resultView.setText(Log.getStackTraceString(error));
                             recordBtn.setText("retry");
+                            fetchLogFile();
                             return;
                         }
                     }
@@ -96,8 +102,20 @@ public class DemoActivity extends AppCompatActivity {
                     resultView.setText(Log.getStackTraceString(error));
                 } else {
                     errorFilePath = null;
+
                     resultView.setText(String.format("filePath = %s\n report = %s", filePath, report));
                     recordBtn.setText("start");
+                }
+                fetchLogFile();
+            }
+
+            private void fetchLogFile() {
+                //拿出日志文件
+                final File logFile = OnlineScorer.getLogFile();
+                if (logFile != null) {
+                    final String result = String.format("%s\n logFile is %s", resultView.getText(),
+                            logFile.getAbsoluteFile());
+                    resultView.setText(result);
                 }
             }
         });
