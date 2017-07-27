@@ -16,9 +16,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -29,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 
 class OnlineScorerProcessor implements AudioProcessor {
 
-    //    private static final String SERVER = "wss://rating.llsstaging.com/openapi/stream/upload";
     private static final String SERVER = "wss://openapi.llsapp.com/openapi/stream/upload";
 
     /**
@@ -169,56 +165,18 @@ class OnlineScorerProcessor implements AudioProcessor {
                         ", exercise quality is " + exercise.getQuality());
         try {
             @SuppressLint("DefaultLocale") String salt = String.format("%d:%s",
-                    System.currentTimeMillis() / 1000, generateRandomString(8));
+                    System.currentTimeMillis() / 1000, Utility.generateRandomString(8));
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("item", exercise.toJson());
             jsonObject.put("appID", appId);
             jsonObject.put("salt", salt);
             String json = jsonObject.toString();
-            String hash = md5(String.format("%s+%s+%s+%s", appId, json, salt, appSecret));
+            String hash = Utility.md5(String.format("%s+%s+%s+%s", appId, json, salt, appSecret));
             meta = Base64.encode(String.format("%s;hash=%s", json, hash));
         } catch (JSONException e) {
             LogCollector.getInstance().e("online processor generate meta error " + e.getMessage(),
                     e);
         }
         return meta;
-    }
-
-    private static String generateRandomString(int length){
-        String alphabet = "0123456789abcdef";
-        int n = alphabet.length();
-
-        String result = "";
-        Random r = new Random();
-        for (int i = 0; i < length; i++) {
-            result = result + alphabet.charAt(r.nextInt(n));
-        }
-
-        return result;
-    }
-
-    private static String md5(final String s) {
-        final String MD5 = "MD5";
-        try {
-            // Create MD5 Hash
-            MessageDigest digest = MessageDigest
-                    .getInstance(MD5);
-            digest.update(s.getBytes());
-            byte messageDigest[] = digest.digest();
-
-            // Create Hex String
-            StringBuilder hexString = new StringBuilder();
-            for (byte aMessageDigest : messageDigest) {
-                String h = Integer.toHexString(0xFF & aMessageDigest);
-                while (h.length() < 2)
-                    h = "0" + h;
-                hexString.append(h);
-            }
-            return hexString.toString();
-
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        return "";
     }
 }

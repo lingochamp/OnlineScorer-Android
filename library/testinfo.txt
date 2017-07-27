@@ -1,0 +1,3 @@
+test user name : test
+test password  : test
+test api       : wss://rating.llsstaging.com/openapi/stream/upload

@@ -6,7 +6,7 @@ import java.io.File;
 
 /**
  * Created by rantianhua on 17/7/26.
- * This is a foreign development class, do some initial works and settings
+ * This is a class that do some initial works and settings
  */
 
 public class OnlineScorer {
@@ -19,7 +19,15 @@ public class OnlineScorer {
         LogCollector.getInstance().setEnable(enable);
     }
 
-    public static File getLogFile() {
-        return LogCollector.getInstance().getLogFile();
+    /**
+     * @return the dir of log files, because write log to file is asynchronous,
+     * so there needs a callback
+     */
+    public static void requestLogDir(RequestLogCallback requestLogCallback) {
+        LogCollector.getInstance().requestLogDir(requestLogCallback);
+    }
+
+    public interface RequestLogCallback {
+        void onDirResponse(File logDir);
     }
 }

@@ -43,7 +43,6 @@ public class DemoActivity extends AppCompatActivity {
         titleView.setText("请说 i will study english very hard");
 
         // 仅供测试用的 appId 和 appSecret
-        // staging account is test
         String appId = null;
         String appSecret = null;
 
@@ -91,7 +90,7 @@ public class DemoActivity extends AppCompatActivity {
                         errorFilePath = "/sdcard/retry.wav";
                         boolean renameSuccess = new File(filePath).renameTo(new File(errorFilePath));
                         if (renameSuccess) {
-                            resultView.setText(Log.getStackTraceString(error));
+                            resultView.setText(error.getMessage());
                             recordBtn.setText("retry");
                             fetchLogFile();
                             return;
@@ -99,7 +98,7 @@ public class DemoActivity extends AppCompatActivity {
                     }
                     errorFilePath = null;
                     recordBtn.setText("start");
-                    resultView.setText(Log.getStackTraceString(error));
+                    resultView.setText(error.getMessage());
                 } else {
                     errorFilePath = null;
 
@@ -111,12 +110,18 @@ public class DemoActivity extends AppCompatActivity {
 
             private void fetchLogFile() {
                 //拿出日志文件
-                final File logFile = OnlineScorer.getLogFile();
-                if (logFile != null) {
-                    final String result = String.format("%s\n logFile is %s", resultView.getText(),
-                            logFile.getAbsoluteFile());
-                    resultView.setText(result);
-                }
+                OnlineScorer.requestLogDir(
+                        new OnlineScorer.RequestLogCallback() {
+                            @Override
+                            public void onDirResponse(File logDir) {
+                                if (logDir != null) {
+                                    final String result = String.format("%s\n logDir is %s",
+                                            resultView.getText(),
+                                            logDir.getAbsoluteFile());
+                                    resultView.setText(result);
+                                }
+                            }
+                        });
             }
         });
 
