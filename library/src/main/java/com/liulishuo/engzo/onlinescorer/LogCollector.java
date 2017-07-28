@@ -26,19 +26,46 @@ import java.util.regex.Pattern;
 
 /**
  * Created by rantianhua on 17/7/25.
- * a collector to collect debug and error log
+ *
+ * a simple collector to collect debug and error log if collector is enabled.
+ * the log info will be printed into console and written into files.
+ *
+ * <p>this class will create a log directory under application shared cache directory to save log
+ * files.
+ * the log directory's name is a random string of 8 bits, and every log file has the same name
+ * pattern.
+ * In this way, the directory is reusable, so I will not create so many directories under cache dir.
+ * In the meantime, I can set thresholds for log directory's size and single log file's size. If
+ * single log file's
+ * size is over, the new log file will be created. If the directory's size is over, the files
+ * created at the first time
+ * will be deleted until the size is under threshold.
+ *
+ * <p>By the way,
+ * @see StringBuilder is used to cache log info to avoid writting files too frequently, so there
+ * aslo
+ * is a threshold set for it. However, if there is an error log info occurs, the thresold is
+ * invalid.
+ *
+ * <p>to start this collector, you just need to invoke
+ * {@link OnlineScorer#setDebugEnable(boolean)} method.
+ * to get the log directory, you just need to invoke
+ * {@link OnlineScorer#requestLogDir(OnlineScorer.RequestLogCallback)}
+ * method. This methos is asynchronous because there is a situation that some log info are still
+ * cached and I need to write it into file.
  */
 
 final class LogCollector {
 
     private static LogCollector sLogCollector;
 
-    private static final long mSbLengthThreshold = 1024 * 1024 / 20;
+    private static final long mSbLengthThreshold = 1024 * 50;
     private static final long mLogFileSizeThreshold = 1024 * 1024 / 2;
     private static final long mLogDirSizeThreshold = 1024 * 1024 * 3;
 
     private static final String TAG = "OnlineScorerRecorder";
     private static final String LOG_FILE_PREFIX = "log";
+    private static final Object LOG_DIRECTORY_LOCK = new Object();
 
     private final StringBuilder mStringBuilder;
     private final SimpleDateFormat mSimpleDateFormat;
@@ -103,7 +130,7 @@ final class LogCollector {
             if (!file.isDirectory()) continue;
             if (file.getName().length() != 8) continue;
             File[] arr = file.listFiles();
-            if (arr.length == 0) return null;
+            if (arr.length == 0) continue;
             boolean isLogDir = true;
             for (File inner : arr) {
                 final String name = inner.getName();
@@ -235,7 +262,7 @@ final class LogCollector {
         Callable<Boolean> callable = new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                synchronized (LOG_FILE_PREFIX) {
+                synchronized (LOG_DIRECTORY_LOCK) {
                     FileOutputStream outputStream = null;
                     File file = getCurrentLogFile();
                     try {
