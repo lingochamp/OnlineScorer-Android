@@ -3,13 +3,19 @@ package com.liulishuo.engzo.onlinescorer;
 import android.annotation.SuppressLint;
 import android.util.Base64;
 
+import com.liulishuo.engzo.common.LogCollector;
 import com.liulishuo.engzo.lingorecorder.LingoRecorder;
 import com.liulishuo.engzo.lingorecorder.processor.AudioProcessor;
 import com.liulishuo.engzo.lingorecorder.processor.WavProcessor;
+import com.liulishuo.engzo.stat.OnlineRealTimeRecordItem;
+import com.liulishuo.engzo.stat.RetryRecordItem;
+import com.liulishuo.engzo.stat.StatItem;
+import com.liulishuo.engzo.stat.StatManager;
 
 import org.json.JSONObject;
 
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by wcw on 4/11/17.
@@ -18,6 +24,8 @@ import java.util.Map;
 public class OnlineScorerRecorder {
 
     private LingoRecorder lingoRecorder;
+    private StatItem statItem;
+    private BaseExercise exercise;
 
     /**
      *
@@ -27,6 +35,8 @@ public class OnlineScorerRecorder {
      * @param filePath
      */
     public OnlineScorerRecorder(String appId, String appSecret, BaseExercise exercise, String filePath) {
+        Config.get().appId = appId;
+        Config.get().appSecret = appSecret;
         lingoRecorder = new LingoRecorder();
         lingoRecorder.sampleRate(16000);
         lingoRecorder.channels(1);
@@ -53,29 +63,33 @@ public class OnlineScorerRecorder {
 
                             if (status == 0) {
                                 onProcessStopListener.onProcessStop(null, filePath, report);
-                                LogCollector.getInstance().d(
-                                        "process stop, filePath: " + filePath + " report: "
+                                LogCollector.get().d(
+                                        "process stop 0, filePath: " + filePath + " report: "
                                                 + report);
                             } else {
                                 final ScorerException scorerException = new ScorerException(status,
                                         errorMsg);
                                 onProcessStopListener.onProcessStop(scorerException, filePath,
                                         null);
-                                LogCollector.getInstance().e(
-                                        "process stop " + scorerException.getMessage(),
+                                statItem.onStatCome("errorCode", "lingo:0");
+                                LogCollector.get().e(
+                                        "process stop 1 " + scorerException.getMessage(),
                                         scorerException);
                             }
+                            statItem.onStatCome("errorCode", "lingo:" + status);
                         } catch (Exception e) {
                             onProcessStopListener.onProcessStop(e, filePath, null);
-                            LogCollector.getInstance().e("process stop " + e.getMessage(), e);
+                            LogCollector.get().e("process stop 2 " + e.getMessage(), e);
                         }
                     } else {
                         onProcessStopListener.onProcessStop(throwable, filePath, null);
-                        LogCollector.getInstance().e("process stop " + throwable.getMessage(),
+                        LogCollector.get().e("process stop 3 " + throwable.getMessage(),
                                 throwable);
                     }
+                    statItem.onStatCome("responseTime", String.valueOf(System.currentTimeMillis()));
+                    StatManager.get().stat(statItem);
                 } else {
-                    LogCollector.getInstance().d("process stop, onProcessStopListener is null.");
+                    LogCollector.get().d("process stop 4, onProcessStopListener is null.");
                 }
             }
         });
@@ -85,17 +99,21 @@ public class OnlineScorerRecorder {
             public void onRecordStop(Throwable throwable) {
                 if (onRecordListener != null) {
                     onRecordListener.onRecordStop(throwable);
+                    statItem.onStatCome("recordEndTime",
+                            String.valueOf(System.currentTimeMillis()));
                     if (throwable == null) {
-                        LogCollector.getInstance().d("stop record ");
+                        LogCollector.get().d("stop record ");
                     } else {
-                        LogCollector.getInstance().e("stop record " + throwable.getMessage(),
+                        LogCollector.get().e("stop record " + throwable.getMessage(),
                                 throwable);
                     }
                 } else {
-                    LogCollector.getInstance().d("stop record, onRecordListener is null.");
+                    LogCollector.get().d("stop record, onRecordListener is null.");
                 }
             }
         });
+
+        this.exercise = exercise;
     }
 
     /**
@@ -105,10 +123,13 @@ public class OnlineScorerRecorder {
     public void startRecord(String wavFilePath) {
         final boolean available = isAvailable();
         if (available) {
+            statItem = new RetryRecordItem(UUID.randomUUID().toString(),
+                    Config.get().network, exercise.getType());
             lingoRecorder.testFile(wavFilePath);
             lingoRecorder.start();
+            statItem.onStatCome("recordStartTime", String.valueOf(System.currentTimeMillis()));
         }
-        LogCollector.getInstance().d(
+        LogCollector.get().d(
                 "start record, wavFilePath: " + wavFilePath + " available: " + available);
     }
 
@@ -118,10 +139,13 @@ public class OnlineScorerRecorder {
     public void startRecord() {
         final boolean available = isAvailable();
         if (available) {
+            statItem = new OnlineRealTimeRecordItem(UUID.randomUUID().toString(),
+                    Config.get().network, exercise.getType());
             lingoRecorder.testFile(null);
             lingoRecorder.start();
+            statItem.onStatCome("recordStartTime", String.valueOf(System.currentTimeMillis()));
         }
-        LogCollector.getInstance().d("start record, available: " + available);
+        LogCollector.get().d("start record, available: " + available);
     }
 
     public void stopRecord() {
@@ -129,7 +153,7 @@ public class OnlineScorerRecorder {
         if (available) {
             lingoRecorder.stop();
         }
-        LogCollector.getInstance().d("stop record, available: " + available);
+        LogCollector.get().d("stop record, available: " + available);
     }
 
     public boolean isRecording() {

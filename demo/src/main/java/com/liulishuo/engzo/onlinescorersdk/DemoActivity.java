@@ -12,6 +12,7 @@ import android.widget.Toast;
 import com.liulishuo.engzo.onlinescorer.OnlineScorer;
 import com.liulishuo.engzo.onlinescorer.OnlineScorerRecorder;
 import com.liulishuo.engzo.onlinescorer.ReadLoudExercise;
+import com.liulishuo.engzo.onlinescorer.RequestLogCallback;
 
 import java.io.File;
 
@@ -43,17 +44,13 @@ public class DemoActivity extends AppCompatActivity {
         titleView.setText("请说 i will study english very hard");
 
         // 仅供测试用的 appId 和 appSecret
-        String appId = null;
-        String appSecret = null;
+        String appId = "test";
+        String appSecret = "test";
 
         if (appId == null || appSecret == null) {
             throw new RuntimeException("appId & appSecret should not be null");
         }
 
-        // 进行在线打分器的初始化
-        OnlineScorer.init(this.getApplicationContext());
-        // 开启日志功能
-        OnlineScorer.setDebugEnable(true);
         // 创建 "i will study english very hard" 这句话的练习
         ReadLoudExercise readLoudExercise = new ReadLoudExercise();
         readLoudExercise.setReftext("i will study english very hard");
@@ -111,7 +108,7 @@ public class DemoActivity extends AppCompatActivity {
             private void fetchLogFile() {
                 //拿出日志文件
                 OnlineScorer.requestLogDir(
-                        new OnlineScorer.RequestLogCallback() {
+                        new RequestLogCallback() {
                             @Override
                             public void onDirResponse(File logDir) {
                                 if (logDir != null) {

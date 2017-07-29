@@ -2,6 +2,9 @@ package com.liulishuo.engzo.onlinescorer;
 
 import android.annotation.SuppressLint;
 
+import com.liulishuo.engzo.common.Base64;
+import com.liulishuo.engzo.common.LogCollector;
+import com.liulishuo.engzo.common.Utility;
 import com.liulishuo.engzo.lingorecorder.processor.AudioProcessor;
 import com.liulishuo.jni.SpeexEncoder;
 import com.neovisionaries.ws.client.WebSocket;
@@ -76,7 +79,7 @@ class OnlineScorerProcessor implements AudioProcessor {
                 .putInt(metaArray.length)
                 .put(metaArray)
                 .array());
-        LogCollector.getInstance().d("start online processor, encodeToSpeex: " + encodeToSpeex);
+        LogCollector.get().d("start online processor, encodeToSpeex: " + encodeToSpeex);
     }
 
     @Override
@@ -103,14 +106,15 @@ class OnlineScorerProcessor implements AudioProcessor {
             throw new OnlineScorerRecorder.ScorerException(2, webSocketException);
         } else if (ws != null) {
             byte[] close = {0x45, 0x4f, 0x53};
-            LogCollector.getInstance().d("OnlineScorerProcessor send eos");
             ws.sendBinary(close);
-            LogCollector.getInstance().d("OnlineScorerProcessor try to wait");
+            LogCollector.get().d(
+                    "end online processor to send eos frame and wait until success.");
             boolean success = latch.await(15, TimeUnit.SECONDS);
             if (!success) {
-                LogCollector.getInstance().d("OnlineScorerProcessor response timeout");
+                LogCollector.get().d("end online processor, eos frame response timeout.");
                 throw new OnlineScorerRecorder.ScorerException(1, "response timeout");
             }
+
         } else {
             throw new OnlineScorerRecorder.ScorerException(1, "socket init and connect error");
         }
@@ -121,14 +125,14 @@ class OnlineScorerProcessor implements AudioProcessor {
         if (ws != null) {
             ws.disconnect();
             ws = null;
-            LogCollector.getInstance().d("release online processor disconnecting web socket.");
+            LogCollector.get().d("release online processor disconnecting web socket.");
         }
         if (encodeToSpeex) {
             if (encoder != null) {
                 encoder.release(pointer);
                 encoder = null;
             }
-            LogCollector.getInstance().d("release online processor releasing speex encoder.");
+            LogCollector.get().d("release online processor releasing speex encoder.");
         }
     }
 
@@ -145,13 +149,14 @@ class OnlineScorerProcessor implements AudioProcessor {
                     @Override
                     public void onError(WebSocket websocket, WebSocketException cause) throws Exception {
                         super.onError(websocket, cause);
-                        LogCollector.getInstance().d("OnlineScorerProcessor websocket error " + cause);
                         socketError = true;
                         webSocketException = cause;
+                        LogCollector.get().e("online processor error " + cause.getMessage(),
+                                cause);
                     }
                     public void onCloseFrame(WebSocket websocket, WebSocketFrame frame) throws Exception {
                         super.onCloseFrame(websocket, frame);
-                        LogCollector.getInstance().d("online processor receive close frame.");
+                        LogCollector.get().d("online processor receive close frame.");
                         latch.countDown();
                     }
 
@@ -172,7 +177,7 @@ class OnlineScorerProcessor implements AudioProcessor {
 
     private String generateMeta(String appId, String appSecret, BaseExercise exercise) {
         String meta = null;
-        LogCollector.getInstance().d(
+        LogCollector.get().d(
                 "online processor generate meta: exercise type is " + exercise.getType() +
                         ", exercise quality is " + exercise.getQuality());
         try {
@@ -186,7 +191,7 @@ class OnlineScorerProcessor implements AudioProcessor {
             String hash = Utility.md5(String.format("%s+%s+%s+%s", appId, json, salt, appSecret));
             meta = Base64.encode(String.format("%s;hash=%s", json, hash));
         } catch (JSONException e) {
-            LogCollector.getInstance().e("online processor generate meta error " + e.getMessage(),
+            LogCollector.get().e("online processor generate meta error " + e.getMessage(),
                     e);
         }
         return meta;

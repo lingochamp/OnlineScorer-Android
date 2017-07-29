@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.liulishuo.engzo.onlinescorer;
+package com.liulishuo.engzo.common;
 
 
 import static com.neovisionaries.ws.client.WebSocketOpcode.BINARY;
@@ -34,32 +34,25 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-class Misc
-{
+class Misc {
     private static final SecureRandom sRandom = new SecureRandom();
 
 
-    private Misc()
-    {
+    private Misc() {
     }
 
 
     /**
      * Get a UTF-8 byte array representation of the given string.
      */
-    public static byte[] getBytesUTF8(String string)
-    {
-        if (string == null)
-        {
+    static byte[] getBytesUTF8(String string) {
+        if (string == null) {
             return null;
         }
 
-        try
-        {
+        try {
             return string.getBytes("UTF-8");
-        }
-        catch (UnsupportedEncodingException e)
-        {
+        } catch (UnsupportedEncodingException e) {
             // This never happens.
             return null;
         }
@@ -69,10 +62,8 @@ class Misc
     /**
      * Convert a UTF-8 byte array into a string.
      */
-    public static String toStringUTF8(byte[] bytes)
-    {
-        if (bytes == null)
-        {
+    public static String toStringUTF8(byte[] bytes) {
+        if (bytes == null) {
             return null;
         }
 
@@ -83,24 +74,17 @@ class Misc
     /**
      * Convert a UTF-8 byte array into a string.
      */
-    public static String toStringUTF8(byte[] bytes, int offset, int length)
-    {
-        if (bytes == null)
-        {
+    private static String toStringUTF8(byte[] bytes, int offset, int length) {
+        if (bytes == null) {
             return null;
         }
 
-        try
-        {
+        try {
             return new String(bytes, offset, length, "UTF-8");
-        }
-        catch (UnsupportedEncodingException e)
-        {
+        } catch (UnsupportedEncodingException e) {
             // This never happens.
             return null;
-        }
-        catch (IndexOutOfBoundsException e)
-        {
+        } catch (IndexOutOfBoundsException e) {
             return null;
         }
     }
@@ -109,8 +93,7 @@ class Misc
     /**
      * Fill the given buffer with random bytes.
      */
-    public static byte[] nextBytes(byte[] buffer)
-    {
+    public static byte[] nextBytes(byte[] buffer) {
         sRandom.nextBytes(buffer);
 
         return buffer;
@@ -120,8 +103,7 @@ class Misc
     /**
      * Create a buffer of the given size filled with random bytes.
      */
-    public static byte[] nextBytes(int nBytes)
-    {
+    public static byte[] nextBytes(int nBytes) {
         byte[] buffer = new byte[nBytes];
 
         return nextBytes(buffer);
@@ -131,10 +113,8 @@ class Misc
     /**
      * Convert a WebSocket opcode into a string representation.
      */
-    public static String toOpcodeName(int opcode)
-    {
-        switch (opcode)
-        {
+    public static String toOpcodeName(int opcode) {
+        switch (opcode) {
             case CONTINUATION:
                 return "CONTINUATION";
 
@@ -157,13 +137,11 @@ class Misc
                 break;
         }
 
-        if (0x1 <= opcode && opcode <= 0x7)
-        {
+        if (0x1 <= opcode && opcode <= 0x7) {
             return String.format("DATA(0x%X)", opcode);
         }
 
-        if (0x8 <= opcode && opcode <= 0xF)
-        {
+        if (0x8 <= opcode && opcode <= 0xF) {
             return String.format("CONTROL(0x%X)", opcode);
         }
 
@@ -174,38 +152,30 @@ class Misc
     /**
      * Read a line from the given stream.
      */
-    public static String readLine(InputStream in, String charset) throws IOException
-    {
+    public static String readLine(InputStream in, String charset) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-        while (true)
-        {
+        while (true) {
             // Read one byte from the stream.
             int b = in.read();
 
             // If the end of the stream was reached.
-            if (b == -1)
-            {
-                if (baos.size() == 0)
-                {
+            if (b == -1) {
+                if (baos.size() == 0) {
                     // No more line.
                     return null;
-                }
-                else
-                {
+                } else {
                     // The end of the line was reached.
                     break;
                 }
             }
 
-            if (b == '\n')
-            {
+            if (b == '\n') {
                 // The end of the line was reached.
                 break;
             }
 
-            if (b != '\r')
-            {
+            if (b != '\r') {
                 // Normal character.
                 baos.write(b);
                 continue;
@@ -215,8 +185,7 @@ class Misc
             int b2 = in.read();
 
             // If the end of the stream was reached.
-            if (b2 == -1)
-            {
+            if (b2 == -1) {
                 // Treat the '\r' as a normal character.
                 baos.write(b);
 
@@ -225,8 +194,7 @@ class Misc
             }
 
             // If '\n' follows the '\r'.
-            if (b2 == '\n')
-            {
+            if (b2 == '\n') {
                 // The end of the line was reached.
                 break;
             }
@@ -246,14 +214,11 @@ class Misc
     /**
      * Find the minimum value from the given array.
      */
-    public static int min(int[] values)
-    {
+    public static int min(int[] values) {
         int min = Integer.MAX_VALUE;
 
-        for (int i = 0; i < values.length; ++i)
-        {
-            if (values[i] < min)
-            {
+        for (int i = 0; i < values.length; ++i) {
+            if (values[i] < min) {
                 min = values[i];
             }
         }
@@ -265,14 +230,11 @@ class Misc
     /**
      * Find the maximum value from the given array.
      */
-    public static int max(int[] values)
-    {
+    public static int max(int[] values) {
         int max = Integer.MIN_VALUE;
 
-        for (int i = 0; i < values.length; ++i)
-        {
-            if (max < values[i])
-            {
+        for (int i = 0; i < values.length; ++i) {
+            if (max < values[i]) {
                 max = values[i];
             }
         }
@@ -281,8 +243,7 @@ class Misc
     }
 
 
-    public static String join(Collection<?> values, String delimiter)
-    {
+    public static String join(Collection<?> values, String delimiter) {
         StringBuilder builder = new StringBuilder();
 
         join(builder, values, delimiter);
@@ -291,18 +252,13 @@ class Misc
     }
 
 
-    private static void join(StringBuilder builder, Collection<?> values, String delimiter)
-    {
+    private static void join(StringBuilder builder, Collection<?> values, String delimiter) {
         boolean first = true;
 
-        for (Object value : values)
-        {
-            if (first)
-            {
+        for (Object value : values) {
+            if (first) {
                 first = false;
-            }
-            else
-            {
+            } else {
                 builder.append(delimiter);
             }
 
@@ -311,13 +267,11 @@ class Misc
     }
 
 
-    public static String extractHost(URI uri)
-    {
+    public static String extractHost(URI uri) {
         // Extract the host part from the URI.
         String host = uri.getHost();
 
-        if (host != null)
-        {
+        if (host != null) {
             return host;
         }
 
@@ -333,8 +287,7 @@ class Misc
         // Extract the host part from the authority part of the URI.
         host = extractHostFromAuthorityPart(uri.getRawAuthority());
 
-        if (host != null)
-        {
+        if (host != null) {
             return host;
         }
 
@@ -343,11 +296,9 @@ class Misc
     }
 
 
-    static String extractHostFromAuthorityPart(String authority)
-    {
+    static String extractHostFromAuthorityPart(String authority) {
         // If the authority part is not available.
-        if (authority == null)
-        {
+        if (authority == null) {
             // Hmm... This should not happen.
             return null;
         }
@@ -356,8 +307,7 @@ class Misc
         Matcher matcher = Pattern.compile("^(.*@)?([^:]+)(:\\d+)?$").matcher(authority);
 
         // If the authority part does not match the expected format.
-        if (matcher == null || matcher.matches() == false)
-        {
+        if (matcher == null || matcher.matches() == false) {
             // Hmm... This should not happen.
             return null;
         }
@@ -367,10 +317,8 @@ class Misc
     }
 
 
-    static String extractHostFromEntireUri(String uri)
-    {
-        if (uri == null)
-        {
+    static String extractHostFromEntireUri(String uri) {
+        if (uri == null) {
             // Hmm... This should not happen.
             return null;
         }
@@ -379,8 +327,7 @@ class Misc
         Matcher matcher = Pattern.compile("^\\w+://([^@/]*@)?([^:/]+)(:\\d+)?(/.*)?$").matcher(uri);
 
         // If the URI does not match the expected format.
-        if (matcher == null || matcher.matches() == false)
-        {
+        if (matcher == null || matcher.matches() == false) {
             // Hmm... This should not happen.
             return null;
         }

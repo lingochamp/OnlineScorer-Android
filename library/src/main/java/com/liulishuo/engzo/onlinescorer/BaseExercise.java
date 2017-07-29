@@ -6,7 +6,7 @@ import org.json.JSONObject;
  * Created by wcw on 3/29/17.
  */
 
-public abstract class BaseExercise {
+abstract class BaseExercise {
 
     private String type;
     private int quality;

@@ -1,4 +1,4 @@
-package com.liulishuo.engzo.onlinescorer;
+package com.liulishuo.engzo.common;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -9,9 +9,9 @@ import java.util.Random;
  * provide some common methods
  */
 
-class Utility {
+public class Utility {
 
-    static String generateRandomString(int len) {
+    public static String generateRandomString(int len) {
         String alphabet = "0123456789abcdef";
         int n = alphabet.length();
 
@@ -24,7 +24,7 @@ class Utility {
         return result;
     }
 
-    static String md5(final String s) {
+    public static String md5(final String s) {
         final String MD5 = "MD5";
         try {
             // Create MD5 Hash

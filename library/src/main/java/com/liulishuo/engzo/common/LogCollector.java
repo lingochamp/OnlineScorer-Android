@@ -1,4 +1,4 @@
-package com.liulishuo.engzo.onlinescorer;
+package com.liulishuo.engzo.common;
 
 import android.content.Context;
 import android.os.Handler;
@@ -7,6 +7,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
+
+import com.liulishuo.engzo.onlinescorer.OnlineScorer;
+import com.liulishuo.engzo.onlinescorer.RequestLogCallback;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -19,8 +22,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.regex.Pattern;
 
@@ -42,6 +43,7 @@ import java.util.regex.Pattern;
  * will be deleted until the size is under threshold.
  *
  * <p>By the way,
+ *
  * @see StringBuilder is used to cache log info to avoid writting files too frequently, so there
  * aslo
  * is a threshold set for it. However, if there is an error log info occurs, the thresold is
@@ -50,12 +52,12 @@ import java.util.regex.Pattern;
  * <p>to start this collector, you just need to invoke
  * {@link OnlineScorer#setDebugEnable(boolean)} method.
  * to get the log directory, you just need to invoke
- * {@link OnlineScorer#requestLogDir(OnlineScorer.RequestLogCallback)}
+ * {@link RequestLogCallback#onDirResponse(File)}
  * method. This methos is asynchronous because there is a situation that some log info are still
  * cached and I need to write it into file.
  */
 
-final class LogCollector {
+public final class LogCollector {
 
     private static LogCollector sLogCollector;
 
@@ -72,32 +74,27 @@ final class LogCollector {
 
     private boolean mEnable;
     private File mLogDir;
-    private ExecutorService mExecutorService;
 
     private LogCollector() {
         mStringBuilder = new StringBuilder();
         mSimpleDateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss", Locale.CHINA);
     }
 
-    static synchronized LogCollector getInstance() {
+    public static synchronized LogCollector get() {
         if (sLogCollector == null) {
             sLogCollector = new LogCollector();
         }
         return sLogCollector;
     }
 
-    synchronized void setEnable(boolean enable) {
+    public synchronized void setEnable(boolean enable) {
         mEnable = enable;
-        if (mEnable) {
-            if (mExecutorService == null) {
-                mExecutorService = Executors.newCachedThreadPool();
-            }
-        } else {
+        if (!mEnable) {
             flushToFile();
         }
     }
 
-    void initLog(Context context) {
+    public void initLog(Context context) {
         if (mLogDir != null && mLogDir.exists()) return;
 
         File cacheDir = context.getExternalCacheDir();
@@ -292,7 +289,7 @@ final class LogCollector {
             }
         };
         FutureTask<Boolean> futureTask = new FutureTask<>(callable);
-        mExecutorService.submit(futureTask);
+        InnerExecutors.getInstance().execute(futureTask);
         return futureTask;
     }
 
@@ -345,7 +342,7 @@ final class LogCollector {
      * @param requestLogCallback return log dir until last log info is written
      *                           into log file.
      */
-    void requestLogDir(final OnlineScorer.RequestLogCallback requestLogCallback) {
+    public void requestLogDir(final RequestLogCallback requestLogCallback) {
         final FutureTask<Boolean> lastFlush = flushToFile();
         if (lastFlush == null) {
             requestLogCallback.onDirResponse(mLogDir);
@@ -370,6 +367,6 @@ final class LogCollector {
                 return true;
             }
         });
-        mExecutorService.submit(futureTask);
+        InnerExecutors.getInstance().execute(futureTask);
     }
 }
