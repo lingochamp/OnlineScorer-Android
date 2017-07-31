@@ -43,6 +43,9 @@ class OnlineScorerProcessor implements AudioProcessor {
 
     private boolean encodeToSpeex = false;
 
+    private boolean socketError = false;
+    private WebSocketException webSocketException;
+
     private BaseExercise exercise;
 
     OnlineScorerProcessor(String appId, String appSecret, BaseExercise exercise) {
@@ -60,6 +63,8 @@ class OnlineScorerProcessor implements AudioProcessor {
 
     @Override
     public void start() throws Exception {
+        socketError = false;
+
         if (encodeToSpeex) {
             encoder = new SpeexEncoder();
             pointer = encoder.init(exercise.getQuality());
@@ -94,14 +99,20 @@ class OnlineScorerProcessor implements AudioProcessor {
 
     @Override
     public void end() throws Exception {
-        byte[] close = {0x45, 0x4f, 0x53};
-        ws.sendBinary(close);
-        LogCollector.getInstance().d(
-                "end online processor to send eos frame and wait until success.");
-        boolean success = latch.await(15, TimeUnit.SECONDS);
-        if (!success) {
-            LogCollector.getInstance().d("end online processor, eos frame response timeout.");
-            throw new OnlineScorerRecorder.ScorerException(1, "response timeout");
+        if (socketError) {
+            throw new OnlineScorerRecorder.ScorerException(2, webSocketException);
+        } else if (ws != null) {
+            byte[] close = {0x45, 0x4f, 0x53};
+            LogCollector.getInstance().d("OnlineScorerProcessor send eos");
+            ws.sendBinary(close);
+            LogCollector.getInstance().d("OnlineScorerProcessor try to wait");
+            boolean success = latch.await(15, TimeUnit.SECONDS);
+            if (!success) {
+                LogCollector.getInstance().d("OnlineScorerProcessor response timeout");
+                throw new OnlineScorerRecorder.ScorerException(1, "response timeout");
+            }
+        } else {
+            throw new OnlineScorerRecorder.ScorerException(1, "socket init and connect error");
         }
     }
 
@@ -134,8 +145,9 @@ class OnlineScorerProcessor implements AudioProcessor {
                     @Override
                     public void onError(WebSocket websocket, WebSocketException cause) throws Exception {
                         super.onError(websocket, cause);
-                        LogCollector.getInstance().e("online processor error " + cause.getMessage(),
-                                cause);
+                        LogCollector.getInstance().d("OnlineScorerProcessor websocket error " + cause);
+                        socketError = true;
+                        webSocketException = cause;
                     }
                     public void onCloseFrame(WebSocket websocket, WebSocketFrame frame) throws Exception {
                         super.onCloseFrame(websocket, frame);

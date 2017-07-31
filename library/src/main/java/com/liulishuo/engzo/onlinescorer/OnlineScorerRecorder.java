@@ -161,6 +161,7 @@ public class OnlineScorerRecorder {
 
     /**
      * 0 - 成功
+     * 2 - 客户端 网络数据传输错误
      * 1 - 客户端 response timeout
      * -1 - 参数有误
      * -20 - 认证失败
@@ -173,8 +174,16 @@ public class OnlineScorerRecorder {
         private int status;
         private String msg;
 
+        public ScorerException(int status, Throwable cause) {
+            super(cause);
+            this.status = status;
+            if (cause != null) {
+                this.msg = cause.getMessage();
+            }
+        }
+
         @SuppressLint("DefaultLocale")
-        ScorerException(int status, String msg) {
+        public ScorerException(int status, String msg) {
             super(String.format("response error status = %d msg = %s", status, msg));
             this.status = status;
             this.msg = msg;
