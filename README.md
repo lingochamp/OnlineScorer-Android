@@ -150,8 +150,9 @@ recordBtn.setOnClickListener(new View.OnClickListener() {
 ```
 
 /**
- * 0 - 成功
+ * 2 - 客户端 网络数据传输错误
  * 1 - 客户端 response timeout
+ * 0 - 成功
  * -1 - 参数有误
  * -20 - 认证失败
  * -30 - 请求过于频繁
