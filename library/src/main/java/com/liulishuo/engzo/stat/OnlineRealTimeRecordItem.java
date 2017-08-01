@@ -18,11 +18,8 @@ public class OnlineRealTimeRecordItem extends StatItem {
     public long responseTime;
     public String errorCode;
 
-    public OnlineRealTimeRecordItem() {
-        type = StateItemType.ONLINE_REALTIME_RECORD;
-    }
-
     public OnlineRealTimeRecordItem(String audioId, String network, String item) {
+        this.type = StateItemType.ONLINE_REALTIME_RECORD;
         this.audioId = audioId;
         this.network = network;
         this.item = item;

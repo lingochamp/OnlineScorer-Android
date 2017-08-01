@@ -30,9 +30,10 @@ import java.util.regex.Pattern;
  * a nonblocking, reliable and fault-tolerant strategy.
  *
  * <p>Nonblocking
- * The specific collect actions are delegated to an innerclass {@link BatchStat}.
- * a queue {@linkplain BatchStat#mStatItems} is used to collect all {@link StatItem}, and
- * there is a min time interval {@linkplain BatchStat#mMinUploadTimeInterval} to decide to start
+ * The specific collect actions are delegated to an innerclass {@link BatchStatistic}.
+ * a queue {@linkplain BatchStatistic#mStatItems} is used to collect all {@link StatItem}, and
+ * there is a min time interval {@linkplain BatchStatistic#mMinUploadTimeInterval} to decide to
+ * start
  * upload
  * or not every time an item is added into the queue.
  * if the queue is not empty, all data in it will be assembled as {@link UploadStatItem}.
@@ -40,9 +41,9 @@ import java.util.regex.Pattern;
  *
  * <p> Fault-tolarant
  * of course there are some data failed to be uploaded, all the failed {@link UploadStatItem}
- * are collect by a list {@linkplain BatchStat#mFailUploadStatItems}. In order to simplify
+ * are collect by a list {@linkplain BatchStatistic#mFailUploadStatItems}. In order to simplify
  * the process of upload, the new assembled {@link UploadStatItem} will be added into the first
- * positon of {@linkplain BatchStat#mFailUploadStatItems}. During upload, iterate through the list
+ * positon of {@linkplain BatchStatistic#mFailUploadStatItems}. During upload, iterate through the list
  * from the first positon and there is a limit for iterating. Because the network operation is in
  * anthoer
  * work thread and item will be added into the tail of the list again, so the dead loop may
@@ -55,22 +56,22 @@ import java.util.regex.Pattern;
  * executors, data have not been upload yet and failed to upload will be saved into files. The
  * {@linkplain #init(Context)} method will create a reusable directory to save for files. and at
  * the constructor
- * of {@link BatchStat}, the directory will be checked and files will be upload immediately.
+ * of {@link BatchStatistic}, the directory will be checked and files will be upload immediately.
  */
 
-public class StatManager {
+public class StatisticManager {
 
-    private BatchStat mBatchStat;
+    private BatchStatistic mBatchStatistic;
     private File mBackupDir;
 
-    private StatManager() {
+    private StatisticManager() {
     }
 
     private static final class Holder {
-        static final StatManager STAT_MANAGER = new StatManager();
+        static final StatisticManager STAT_MANAGER = new StatisticManager();
     }
 
-    public static StatManager get() {
+    public static StatisticManager get() {
         return Holder.STAT_MANAGER;
     }
 
@@ -82,20 +83,21 @@ public class StatManager {
         if (existedBackupDir != null) {
             mBackupDir = existedBackupDir;
             LogCollector.get().d(
-                    "StatManager init with exist backup dir: " + mBackupDir.getAbsolutePath());
+                    "StatisticManager init with exist backup dir: " + mBackupDir.getAbsolutePath());
         } else {
             mBackupDir = new File(cacheDir, Utility.generateRandomString(9));
             LogCollector.get().d(
-                    "StatManager init with new backup dir: " + mBackupDir.getAbsolutePath());
+                    "StatisticManager init with new backup dir: " + mBackupDir.getAbsolutePath());
         }
-        mBatchStat = new BatchStat();
+        mBatchStatistic = new BatchStatistic();
+        mBatchStatistic.uploadBackupStatItems();
     }
 
     /**
      * @param cacheDir application shared cache dir
-     * @return existed backup dir, dir name is a random string of 9 bits,
+     * @return existed backup dir, dir name is a random string of 9 bytes,
      * the backup files' names in this directory have fixed pattern:
-     * backup + random string of 4 bits
+     * backup + random string of 4 bytes
      */
     private File checkExistedBackupDir(File cacheDir) {
         final File[] files = cacheDir.listFiles();
@@ -119,33 +121,32 @@ public class StatManager {
     }
 
     public void stat(StatItem statItem) {
-        LogCollector.get().d("StatManager add a stat item " + statItem);
-        mBatchStat.addItem(statItem);
+        LogCollector.get().d("StatisticManager add a stat item " + statItem);
+        mBatchStatistic.addItem(statItem);
     }
 
     public void release() {
-        if (mBatchStat == null) return;
-        mBatchStat.stopSchedule();
-        LogCollector.get().d("StatManager release");
-
+        if (mBatchStatistic == null) return;
+        mBatchStatistic.saveUnUploadItems();
+        LogCollector.get().d("StatisticManager release");
     }
 
-    private final class BatchStat {
+    private final class BatchStatistic {
 
         private final ConcurrentLinkedQueue<StatItem> mStatItems;
         private final List<NetTask> mNetTasks;
         private final List<UploadStatItem> mFailUploadStatItems;
         private final int MAX_CONTINUOUS_UPLOAD_LIMITS = 5;
-        private final long mMinUploadTimeInterval = 5 * 1000;
+        private final long mMinUploadTimeInterval = 5 * 60 * 1000;
 
         private long mLastUploadTime = System.currentTimeMillis();
 
-        BatchStat() {
+        BatchStatistic() {
             mStatItems = new ConcurrentLinkedQueue<>();
             mNetTasks = new ArrayList<>();
             mFailUploadStatItems = new ArrayList<>();
-            uploadBackupStatItems();
         }
+
 
         /**
          * upload backup info saved last time.
@@ -180,7 +181,7 @@ public class StatManager {
                 outputStream.flush();
                 final byte[] data = byteArrayOutputStream.toByteArray();
                 final String str = new String(data);
-                LogCollector.get().d("StatManager upload backup file, data is " + str);
+                LogCollector.get().d("StatisticManager upload backup file, data is " + str);
 
                 InnerExecutors.getInstance().execute(new NetTask("", NetTask.Method.POST,
                         new NetTaskListenerAdapter() {
@@ -191,7 +192,7 @@ public class StatManager {
                         }).setBody(str));
 
             } catch (Exception e) {
-                LogCollector.get().e("StatManager upload backup error, " + e.getMessage(),
+                LogCollector.get().e("StatisticManager upload backup error, " + e.getMessage(),
                         e);
             } finally {
                 if (inputStream != null) {
@@ -224,7 +225,7 @@ public class StatManager {
                     out = new FileOutputStream(file);
                     out.write("".getBytes());
                     out.flush();
-                    LogCollector.get().d("StatManager clear backup file success");
+                    LogCollector.get().d("StatisticManager clear backup file success");
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
@@ -237,7 +238,7 @@ public class StatManager {
                     }
                 }
             } else {
-                LogCollector.get().d("StatManager delete backup file success");
+                LogCollector.get().d("StatisticManager delete backup file success");
             }
         }
 
@@ -259,7 +260,7 @@ public class StatManager {
 
                 while (!mFailUploadStatItems.isEmpty()) {
                     LogCollector.get().d(
-                            "StatManager start upload stat, total failed size is "
+                            "StatisticManager start upload stat, total failed size is "
                                     + mFailUploadStatItems.size());
                     final UploadStatItem item = mFailUploadStatItems.remove(0);
                     index++;
@@ -270,7 +271,7 @@ public class StatManager {
                                     synchronized (mFailUploadStatItems) {
                                         mFailUploadStatItems.add(item);
                                         LogCollector.get().d(
-                                                "StatManager upload a stat item failed and add to"
+                                                "StatisticManager upload a stat item failed and add to"
                                                         + " mFailUploadStatItems");
                                     }
                                 }
@@ -280,7 +281,7 @@ public class StatManager {
                                     synchronized (mFailUploadStatItems) {
                                         mFailUploadStatItems.add(item);
                                         LogCollector.get().e(
-                                                "StatManager upload a stat item failed and add to"
+                                                "StatisticManager upload a stat item failed and add to"
                                                         + " mFailUploadStatItems"
                                                         + throwable.getMessage(), throwable);
                                     }
@@ -322,25 +323,21 @@ public class StatManager {
             }
 
             LogCollector.get().d(
-                    "StatManager assemble batch data, item size is " + statItems.size());
+                    "StatisticManager assemble batch data, item size is " + statItems.size());
             if (statItems.size() == 0) return null;
             final UploadStatItem uploadStatItem = new UploadStatItem();
             uploadStatItem.stats = statItems;
             return uploadStatItem;
         }
 
-        void addItem(StatItem item) {
+        private void addItem(StatItem item) {
             mStatItems.offer(item);
             final long interval = System.currentTimeMillis() - mLastUploadTime;
-            LogCollector.get().d("StatManager add an item, interval is " + interval);
+            LogCollector.get().d("StatisticManager add an item, interval is " + interval);
             if (interval > mMinUploadTimeInterval) {
                 mLastUploadTime += interval;
                 uploadStatItems();
             }
-        }
-
-        void stopSchedule() {
-            saveUnUploadItems();
         }
 
         /**
@@ -371,7 +368,7 @@ public class StatManager {
                         }
 
                         LogCollector.get().d(
-                                "StatManager start save upload failed files, number is "
+                                "StatisticManager start save upload failed files, number is "
                                         + mFailUploadStatItems.size());
 
                         if (!mBackupDir.exists()) {
@@ -381,7 +378,7 @@ public class StatManager {
                             final File file = new File(mBackupDir,
                                     "backup" + Utility.generateRandomString(4));
                             LogCollector.get().d(
-                                    "StatManager save an upload failed file in "
+                                    "StatisticManager save an upload failed file in "
                                             + file.getAbsolutePath());
                             FileOutputStream outputStream = null;
                             try {
@@ -391,7 +388,8 @@ public class StatManager {
                                 outputStream.flush();
                             } catch (IOException e) {
                                 LogCollector.get().e(
-                                        "StatManager save an upload error " + e.getMessage(), e);
+                                        "StatisticManager save an upload error " + e.getMessage(),
+                                        e);
                             } finally {
                                 if (outputStream != null) {
                                     try {

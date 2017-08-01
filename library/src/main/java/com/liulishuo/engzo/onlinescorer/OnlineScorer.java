@@ -5,7 +5,7 @@ import android.app.Application;
 import android.os.Bundle;
 
 import com.liulishuo.engzo.common.LogCollector;
-import com.liulishuo.engzo.stat.StatManager;
+import com.liulishuo.engzo.stat.StatisticManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,7 @@ public class OnlineScorer {
 
     public static void init(Application application) {
         Config.get().init(application);
-        StatManager.get().init(application);
+        StatisticManager.get().init(application);
         LogCollector.get().initLog(application);
         application.registerActivityLifecycleCallbacks(
                 new Application.ActivityLifecycleCallbacks() {
@@ -62,7 +62,7 @@ public class OnlineScorer {
                         if (mActivities.size() == 0) {
                             LogCollector.get().d(
                                     "OnlineScorer all activity destroyed, start to release.");
-                            StatManager.get().release();
+                            StatisticManager.get().release();
                         }
                     }
                 });

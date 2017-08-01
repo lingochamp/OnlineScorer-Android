@@ -19,13 +19,10 @@ public class RetryRecordItem extends StatItem {
     public String errorCode;
 
     public RetryRecordItem(String audioId, String network, String item) {
+        this.type = StateItemType.RETRY_RECORD;
         this.audioId = audioId;
         this.network = network;
         this.item = item;
-    }
-
-    public RetryRecordItem() {
-        type = StateItemType.RETRY_RECORD;
     }
 
     @Override

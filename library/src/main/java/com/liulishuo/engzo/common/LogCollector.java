@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
  *
  * <p>this class will create a log directory under application shared cache directory to save log
  * files.
- * the log directory's name is a random string of 8 bits, and every log file has the same name
+ * the log directory's name is a random string of 8 bytes, and every log file has the same name
  * pattern.
  * In this way, the directory is reusable, so I will not create so many directories under cache dir.
  * In the meantime, I can set thresholds for log directory's size and single log file's size. If
@@ -114,7 +114,7 @@ public final class LogCollector {
     }
 
     /**
-     * @param cacheDir directory of log files, dir's name is a random string of 8 bits
+     * @param cacheDir directory of log files, dir's name is a random string of 8 bytes
      *                 and all the log file's name is a confirmed pattern such as log0.txt,
      *                 log1.txt,...,logN.txt, N is an increasing number.
      * @return an exit log dir under cacheDir

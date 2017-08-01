@@ -10,7 +10,7 @@ import com.liulishuo.engzo.lingorecorder.processor.WavProcessor;
 import com.liulishuo.engzo.stat.OnlineRealTimeRecordItem;
 import com.liulishuo.engzo.stat.RetryRecordItem;
 import com.liulishuo.engzo.stat.StatItem;
-import com.liulishuo.engzo.stat.StatManager;
+import com.liulishuo.engzo.stat.StatisticManager;
 
 import org.json.JSONObject;
 
@@ -87,7 +87,7 @@ public class OnlineScorerRecorder {
                                 throwable);
                     }
                     statItem.onStatCome("responseTime", String.valueOf(System.currentTimeMillis()));
-                    StatManager.get().stat(statItem);
+                    StatisticManager.get().stat(statItem);
                 } else {
                     LogCollector.get().d("process stop 4, onProcessStopListener is null.");
                 }
