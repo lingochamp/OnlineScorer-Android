@@ -102,6 +102,7 @@ public class RetryRecordItem extends StatItem {
     @Override
     public String toString() {
         return "RetryRecordItem{" +
+                "type='" + type + '\'' +
                 "audioId='" + audioId + '\'' +
                 ", network='" + network + '\'' +
                 ", item='" + item + '\'' +

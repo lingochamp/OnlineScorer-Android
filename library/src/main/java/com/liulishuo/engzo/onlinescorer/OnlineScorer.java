@@ -17,8 +17,8 @@ import java.util.List;
 
 public class OnlineScorer {
 
-    public static void init(Application application) {
-        Config.get().init(application);
+    public static void init(Application application, String appId, String secretId) {
+        Config.get().init(application, appId, secretId);
         StatisticManager.get().init(application);
         LogCollector.get().initLog(application);
         application.registerActivityLifecycleCallbacks(

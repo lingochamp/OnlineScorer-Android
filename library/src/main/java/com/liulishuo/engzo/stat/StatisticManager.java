@@ -1,7 +1,9 @@
 package com.liulishuo.engzo.stat;
 
+import android.Manifest;
 import android.content.Context;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 
 import com.liulishuo.engzo.common.InnerExecutors;
 import com.liulishuo.engzo.common.LogCollector;
@@ -77,17 +79,17 @@ public class StatisticManager {
 
     public void init(Context context) {
         File cacheDir = context.getExternalCacheDir();
-        if (cacheDir == null) cacheDir = context.getCacheDir();
+        if (cacheDir == null || cacheDir.listFiles() == null) {
+            cacheDir = context.getCacheDir();
+        }
+
+        if (cacheDir.listFiles() == null) return;
 
         File existedBackupDir = checkExistedBackupDir(cacheDir);
         if (existedBackupDir != null) {
             mBackupDir = existedBackupDir;
-            LogCollector.get().d(
-                    "StatisticManager init with exist backup dir: " + mBackupDir.getAbsolutePath());
         } else {
             mBackupDir = new File(cacheDir, Utility.generateRandomString(9));
-            LogCollector.get().d(
-                    "StatisticManager init with new backup dir: " + mBackupDir.getAbsolutePath());
         }
         mBatchStatistic = new BatchStatistic();
         mBatchStatistic.uploadBackupStatItems();
@@ -138,6 +140,7 @@ public class StatisticManager {
         private final List<UploadStatItem> mFailUploadStatItems;
         private final int MAX_CONTINUOUS_UPLOAD_LIMITS = 5;
         private final long mMinUploadTimeInterval = 5 * 60 * 1000;
+        private final String URL = "https://rating.llsstaging.com/stat";
 
         private long mLastUploadTime = System.currentTimeMillis();
 
@@ -183,7 +186,7 @@ public class StatisticManager {
                 final String str = new String(data);
                 LogCollector.get().d("StatisticManager upload backup file, data is " + str);
 
-                InnerExecutors.getInstance().execute(new NetTask("", NetTask.Method.POST,
+                InnerExecutors.getInstance().execute(new NetTask(URL, NetTask.Method.POST,
                         new NetTaskListenerAdapter() {
                             @Override
                             public void onSuccess(String reponse) {
@@ -264,7 +267,7 @@ public class StatisticManager {
                                     + mFailUploadStatItems.size());
                     final UploadStatItem item = mFailUploadStatItems.remove(0);
                     index++;
-                    final NetTask netTask = new NetTask("", NetTask.Method.POST,
+                    final NetTask netTask = new NetTask(URL, NetTask.Method.POST,
                             new NetTaskListenerAdapter() {
                                 @Override
                                 public void onFailed(int code, String msg) {

@@ -13,9 +13,8 @@ public class DemoApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        // 开启日志功能
+        OnlineScorer.init(this, "test", "test");
         OnlineScorer.setDebugEnable(true);
-        OnlineScorer.init(this);
     }
 
 }

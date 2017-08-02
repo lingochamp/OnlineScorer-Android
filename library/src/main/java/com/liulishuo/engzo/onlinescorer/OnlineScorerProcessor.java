@@ -29,7 +29,8 @@ import java.util.concurrent.TimeUnit;
 
 class OnlineScorerProcessor implements AudioProcessor {
 
-    private static final String SERVER = "wss://openapi.llsapp.com/openapi/stream/upload";
+//    private static final String SERVER = "wss://openapi.llsapp.com/openapi/stream/upload";
+    private static final String SERVER = "wss://rating.llsstaging.com/openapi/stream/upload";
 
     /**
      * The timeout value in milliseconds for socket connection.
@@ -50,19 +51,21 @@ class OnlineScorerProcessor implements AudioProcessor {
     private WebSocketException webSocketException;
 
     private BaseExercise exercise;
+    private String audioId;
+    private SpeexEncoder encoder;
+    private int frameSize;
+    private long pointer;
 
-    OnlineScorerProcessor(String appId, String appSecret, BaseExercise exercise) {
-        meta = generateMeta(appId, appSecret, exercise);
+    OnlineScorerProcessor(BaseExercise exercise) {
         this.exercise = exercise;
         if (exercise.getQuality() >= 0) {
             encodeToSpeex = true;
         }
     }
 
-    private SpeexEncoder encoder;
-    private int frameSize;
-
-    private long pointer;
+    public void setAudioId(String audioId) {
+        this.audioId = audioId;
+    }
 
     @Override
     public void start() throws Exception {
@@ -74,6 +77,7 @@ class OnlineScorerProcessor implements AudioProcessor {
             frameSize = encoder.getFrameSize(pointer);
         }
         ws = connect();
+        meta = generateMeta(audioId, exercise);
         byte[] metaArray = meta.getBytes("UTF-8");
         ws.sendBinary(ByteBuffer.allocate(4 + metaArray.length)
                 .putInt(metaArray.length)
@@ -175,7 +179,7 @@ class OnlineScorerProcessor implements AudioProcessor {
                 .connect();
     }
 
-    private String generateMeta(String appId, String appSecret, BaseExercise exercise) {
+    private String generateMeta(String audioId, BaseExercise exercise) {
         String meta = null;
         LogCollector.get().d(
                 "online processor generate meta: exercise type is " + exercise.getType() +
@@ -185,10 +189,11 @@ class OnlineScorerProcessor implements AudioProcessor {
                     System.currentTimeMillis() / 1000, Utility.generateRandomString(8));
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("item", exercise.toJson());
-            jsonObject.put("appID", appId);
+            jsonObject.put("appID", Config.get().appId);
             jsonObject.put("salt", salt);
+            jsonObject.put("audioID", audioId);
             String json = jsonObject.toString();
-            String hash = Utility.md5(String.format("%s+%s+%s+%s", appId, json, salt, appSecret));
+            String hash = Utility.md5(String.format("%s+%s+%s+%s", Config.get().appId, json, salt, Config.get().appSecret));
             meta = Base64.encode(String.format("%s;hash=%s", json, hash));
         } catch (JSONException e) {
             LogCollector.get().e("online processor generate meta error " + e.getMessage(),

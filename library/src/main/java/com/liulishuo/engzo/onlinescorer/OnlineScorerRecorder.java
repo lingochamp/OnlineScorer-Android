@@ -11,6 +11,7 @@ import com.liulishuo.engzo.stat.OnlineRealTimeRecordItem;
 import com.liulishuo.engzo.stat.RetryRecordItem;
 import com.liulishuo.engzo.stat.StatItem;
 import com.liulishuo.engzo.stat.StatisticManager;
+import com.neovisionaries.ws.client.WebSocketException;
 
 import org.json.JSONObject;
 
@@ -26,22 +27,27 @@ public class OnlineScorerRecorder {
     private LingoRecorder lingoRecorder;
     private StatItem statItem;
     private BaseExercise exercise;
+    private OnlineScorerProcessor onlineScorerProcessor;
 
-    /**
-     *
-     * @param appId
-     * @param appSecret
-     * @param exercise
-     * @param filePath
-     */
+    public OnlineScorerRecorder(BaseExercise exercise, String filePath) {
+        initRecorder(exercise, filePath);
+        this.exercise = exercise;
+    }
+
+    @Deprecated
     public OnlineScorerRecorder(String appId, String appSecret, BaseExercise exercise, String filePath) {
         Config.get().appId = appId;
         Config.get().appSecret = appSecret;
+        initRecorder(exercise, filePath);
+        this.exercise = exercise;
+    }
+
+    private void initRecorder(BaseExercise exercise, String filePath) {
         lingoRecorder = new LingoRecorder();
         lingoRecorder.sampleRate(16000);
         lingoRecorder.channels(1);
         lingoRecorder.bitsPerSample(16);
-        final OnlineScorerProcessor onlineScorerProcessor = new OnlineScorerProcessor(appId, appSecret, exercise);
+        onlineScorerProcessor = new OnlineScorerProcessor(exercise);
         lingoRecorder.put("onlineScorer", onlineScorerProcessor);
         final WavProcessor wavProcessor = new WavProcessor(filePath);
         lingoRecorder.put("wavProcessor", wavProcessor);
@@ -71,7 +77,6 @@ public class OnlineScorerRecorder {
                                         errorMsg);
                                 onProcessStopListener.onProcessStop(scorerException, filePath,
                                         null);
-                                statItem.onStatCome("errorCode", "lingo:0");
                                 LogCollector.get().e(
                                         "process stop 1 " + scorerException.getMessage(),
                                         scorerException);
@@ -79,10 +84,17 @@ public class OnlineScorerRecorder {
                             statItem.onStatCome("errorCode", "lingo:" + status);
                         } catch (Exception e) {
                             onProcessStopListener.onProcessStop(e, filePath, null);
+                            statItem.onStatCome("errorCode", "lingo:" + e.getMessage());
                             LogCollector.get().e("process stop 2 " + e.getMessage(), e);
                         }
                     } else {
                         onProcessStopListener.onProcessStop(throwable, filePath, null);
+                        if (throwable instanceof WebSocketException) {
+                            WebSocketException webSocketException = (WebSocketException) throwable;
+                            statItem.onStatCome("errorCode", webSocketException.getError().name());
+                        } else {
+                            statItem.onStatCome("errorCode", "lingo:" + throwable.getMessage());
+                        }
                         LogCollector.get().e("process stop 3 " + throwable.getMessage(),
                                 throwable);
                     }
@@ -95,14 +107,16 @@ public class OnlineScorerRecorder {
         });
 
         lingoRecorder.setOnRecordStopListener(new LingoRecorder.OnRecordStopListener() {
+
             @Override
-            public void onRecordStop(Throwable throwable) {
+            public void onRecordStop(Throwable throwable,
+                    Result result) {
                 if (onRecordListener != null) {
                     onRecordListener.onRecordStop(throwable);
                     statItem.onStatCome("recordEndTime",
                             String.valueOf(System.currentTimeMillis()));
                     if (throwable == null) {
-                        LogCollector.get().d("stop record ");
+                        LogCollector.get().d("stop record, duration is " + result.getDurationInMills());
                     } else {
                         LogCollector.get().e("stop record " + throwable.getMessage(),
                                 throwable);
@@ -112,8 +126,6 @@ public class OnlineScorerRecorder {
                 }
             }
         });
-
-        this.exercise = exercise;
     }
 
     /**
@@ -123,8 +135,9 @@ public class OnlineScorerRecorder {
     public void startRecord(String wavFilePath) {
         final boolean available = isAvailable();
         if (available) {
-            statItem = new RetryRecordItem(UUID.randomUUID().toString(),
-                    Config.get().network, exercise.getType());
+            final String audioId = UUID.randomUUID().toString();
+            onlineScorerProcessor.setAudioId(audioId);
+            statItem = new RetryRecordItem(audioId, Config.get().network, exercise.getType());
             lingoRecorder.testFile(wavFilePath);
             lingoRecorder.start();
             statItem.onStatCome("recordStartTime", String.valueOf(System.currentTimeMillis()));
@@ -139,8 +152,9 @@ public class OnlineScorerRecorder {
     public void startRecord() {
         final boolean available = isAvailable();
         if (available) {
-            statItem = new OnlineRealTimeRecordItem(UUID.randomUUID().toString(),
-                    Config.get().network, exercise.getType());
+            final String audioId = UUID.randomUUID().toString();
+            onlineScorerProcessor.setAudioId(audioId);
+            statItem = new OnlineRealTimeRecordItem(audioId, Config.get().network, exercise.getType());
             lingoRecorder.testFile(null);
             lingoRecorder.start();
             statItem.onStatCome("recordStartTime", String.valueOf(System.currentTimeMillis()));
@@ -198,7 +212,7 @@ public class OnlineScorerRecorder {
         private int status;
         private String msg;
 
-        public ScorerException(int status, Throwable cause) {
+        ScorerException(int status, Throwable cause) {
             super(cause);
             this.status = status;
             if (cause != null) {
@@ -207,7 +221,7 @@ public class OnlineScorerRecorder {
         }
 
         @SuppressLint("DefaultLocale")
-        public ScorerException(int status, String msg) {
+        ScorerException(int status, String msg) {
             super(String.format("response error status = %d msg = %s", status, msg));
             this.status = status;
             this.msg = msg;

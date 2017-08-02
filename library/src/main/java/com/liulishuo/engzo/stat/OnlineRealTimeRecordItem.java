@@ -108,6 +108,7 @@ public class OnlineRealTimeRecordItem extends StatItem {
     @Override
     public String toString() {
         return "OnlineRealTimeRecordItem{" +
+                "type='" + type + '\'' +
                 "audioId='" + audioId + '\'' +
                 ", network='" + network + '\'' +
                 ", item='" + item + '\'' +

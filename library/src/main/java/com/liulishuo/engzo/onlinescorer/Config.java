@@ -32,12 +32,14 @@ public final class Config {
         return Holder.CONFIG;
     }
 
-    public void init(Application application) {
+    void init(Application application, String appId, String appSecret) {
         try {
             deviceId = Settings.Secure.getString(application.getContentResolver(),
                     Settings.Secure.ANDROID_ID);
         } catch (Exception e) {
             deviceId = "0-0";
         }
+        this.appSecret = appSecret;
+        this.appId = appId;
     }
 }

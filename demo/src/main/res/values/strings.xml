@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">OnlineScorerSdk</string>
+	<string name="check_permission_title">Permission Check</string>
+	<string name="check_permission_content">Need to provide writting external storage and recording
+		permissons
+	</string>
+	<string name="confirm">OK</string>
+	<string name="check_permission_fail">Failed to obtain permissions</string>
 </resources>

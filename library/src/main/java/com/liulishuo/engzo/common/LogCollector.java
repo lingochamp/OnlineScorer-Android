@@ -98,18 +98,17 @@ public final class LogCollector {
         if (mLogDir != null && mLogDir.exists()) return;
 
         File cacheDir = context.getExternalCacheDir();
-        if (cacheDir == null) {
+        if (cacheDir == null || cacheDir.listFiles() == null) {
             cacheDir = context.getCacheDir();
         }
+
+        if (cacheDir.listFiles() == null) return;
 
         final File existedLogDir = getExistedLogDir(cacheDir);
         if (existedLogDir != null) {
             mLogDir = existedLogDir;
         } else {
             mLogDir = new File(cacheDir, Utility.generateRandomString(8));
-            if (!mLogDir.exists()) {
-                mLogDir.mkdir();
-            }
         }
     }
 
@@ -260,6 +259,11 @@ public final class LogCollector {
             @Override
             public Boolean call() throws Exception {
                 synchronized (LOG_DIRECTORY_LOCK) {
+                    if (mLogDir == null) return false;
+
+                    if (!mLogDir.exists()) {
+                        if (!mLogDir.mkdir()) return false;
+                    }
                     FileOutputStream outputStream = null;
                     File file = getCurrentLogFile();
                     try {
