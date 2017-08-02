@@ -9,5 +9,5 @@
 local.properties
 build/
 .externalNativeBuild
-testinfo.txt
 .gradle
+/library/testinfo.txt

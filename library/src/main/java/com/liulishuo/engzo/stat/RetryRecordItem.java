@@ -45,7 +45,7 @@ public class RetryRecordItem extends StatItem {
     }
 
     @Override
-    public void onStatCome(String name, String value) {
+    public void collectStatPoint(String name, String value) {
         if (name.equals("recordStartTime")) {
             this.recordStartTime = Long.valueOf(value);
         } else if (name.equals("responseTime")) {
@@ -53,23 +53,6 @@ public class RetryRecordItem extends StatItem {
         } else if (name.equals("errorCode")) {
             this.errorCode = value;
         }
-    }
-
-    @Override
-    public StatItem fromJson(JSONObject item) {
-        try {
-            this.type = item.getString("type");
-            JSONObject jsonObject = item.getJSONObject("data");
-            this.audioId = jsonObject.getString("audioId");
-            this.network = jsonObject.getString("network");
-            this.item = jsonObject.getString("item");
-            this.recordStartTime = jsonObject.getLong("recordStartTime");
-            this.responseTime = jsonObject.getLong("responseTime");
-            this.errorCode = jsonObject.getString("errorCode");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return this;
     }
 
     @Override

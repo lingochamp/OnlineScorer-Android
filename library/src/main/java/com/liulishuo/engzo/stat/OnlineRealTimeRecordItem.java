@@ -46,25 +46,7 @@ public class OnlineRealTimeRecordItem extends StatItem {
     }
 
     @Override
-    public StatItem fromJson(JSONObject item) {
-        try {
-            this.type = item.getString("type");
-            JSONObject jsonObject = item.getJSONObject("data");
-            this.audioId = jsonObject.getString("audioId");
-            this.network = jsonObject.getString("network");
-            this.item = jsonObject.getString("item");
-            this.recordStartTime = jsonObject.getLong("recordStartTime");
-            this.recordEndTime = jsonObject.getLong("recordEndTime");
-            this.responseTime = jsonObject.getLong("responseTime");
-            this.errorCode = jsonObject.getString("errorCode");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return this;
-    }
-
-    @Override
-    public void onStatCome(String name, String value) {
+    public void collectStatPoint(String name, String value) {
         if (name.equals("recordStartTime")) {
             this.recordStartTime = Long.valueOf(value);
         } else if (name.equals("recordEndTime")) {

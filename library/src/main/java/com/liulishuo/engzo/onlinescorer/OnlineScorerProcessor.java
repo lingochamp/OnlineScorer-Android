@@ -29,8 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 class OnlineScorerProcessor implements AudioProcessor {
 
-//    private static final String SERVER = "wss://openapi.llsapp.com/openapi/stream/upload";
-    private static final String SERVER = "wss://rating.llsstaging.com/openapi/stream/upload";
+    private static final String SERVER = "wss://openapi.llsapp.com/openapi/stream/upload";
 
     /**
      * The timeout value in milliseconds for socket connection.

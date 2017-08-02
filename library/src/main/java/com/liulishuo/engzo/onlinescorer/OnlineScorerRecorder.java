@@ -81,24 +81,24 @@ public class OnlineScorerRecorder {
                                         "process stop 1 " + scorerException.getMessage(),
                                         scorerException);
                             }
-                            statItem.onStatCome("errorCode", "lingo:" + status);
+                            statItem.collectStatPoint("errorCode", "lingo:" + status);
                         } catch (Exception e) {
                             onProcessStopListener.onProcessStop(e, filePath, null);
-                            statItem.onStatCome("errorCode", "lingo:" + e.getMessage());
+                            statItem.collectStatPoint("errorCode", "lingo:" + e.getMessage());
                             LogCollector.get().e("process stop 2 " + e.getMessage(), e);
                         }
                     } else {
                         onProcessStopListener.onProcessStop(throwable, filePath, null);
                         if (throwable instanceof WebSocketException) {
                             WebSocketException webSocketException = (WebSocketException) throwable;
-                            statItem.onStatCome("errorCode", webSocketException.getError().name());
+                            statItem.collectStatPoint("errorCode", webSocketException.getError().name());
                         } else {
-                            statItem.onStatCome("errorCode", "lingo:" + throwable.getMessage());
+                            statItem.collectStatPoint("errorCode", "lingo:" + throwable.getMessage());
                         }
                         LogCollector.get().e("process stop 3 " + throwable.getMessage(),
                                 throwable);
                     }
-                    statItem.onStatCome("responseTime", String.valueOf(System.currentTimeMillis()));
+                    statItem.collectStatPoint("responseTime", String.valueOf(System.currentTimeMillis()));
                     StatisticManager.get().stat(statItem);
                 } else {
                     LogCollector.get().d("process stop 4, onProcessStopListener is null.");
@@ -113,7 +113,7 @@ public class OnlineScorerRecorder {
                     Result result) {
                 if (onRecordListener != null) {
                     onRecordListener.onRecordStop(throwable);
-                    statItem.onStatCome("recordEndTime",
+                    statItem.collectStatPoint("recordEndTime",
                             String.valueOf(System.currentTimeMillis()));
                     if (throwable == null) {
                         LogCollector.get().d("stop record, duration is " + result.getDurationInMills());
@@ -137,10 +137,14 @@ public class OnlineScorerRecorder {
         if (available) {
             final String audioId = UUID.randomUUID().toString();
             onlineScorerProcessor.setAudioId(audioId);
-            statItem = new RetryRecordItem(audioId, Config.get().network, exercise.getType());
+            if (wavFilePath == null) {
+                statItem = new OnlineRealTimeRecordItem(audioId, Config.get().network, exercise.getType());
+            } else {
+                statItem = new RetryRecordItem(audioId, Config.get().network, exercise.getType());
+            }
             lingoRecorder.testFile(wavFilePath);
             lingoRecorder.start();
-            statItem.onStatCome("recordStartTime", String.valueOf(System.currentTimeMillis()));
+            statItem.collectStatPoint("recordStartTime", String.valueOf(System.currentTimeMillis()));
         }
         LogCollector.get().d(
                 "start record, wavFilePath: " + wavFilePath + " available: " + available);
@@ -150,16 +154,7 @@ public class OnlineScorerRecorder {
      * start recording from android audioRecorder
      */
     public void startRecord() {
-        final boolean available = isAvailable();
-        if (available) {
-            final String audioId = UUID.randomUUID().toString();
-            onlineScorerProcessor.setAudioId(audioId);
-            statItem = new OnlineRealTimeRecordItem(audioId, Config.get().network, exercise.getType());
-            lingoRecorder.testFile(null);
-            lingoRecorder.start();
-            statItem.onStatCome("recordStartTime", String.valueOf(System.currentTimeMillis()));
-        }
-        LogCollector.get().d("start record, available: " + available);
+        startRecord(null);
     }
 
     public void stopRecord() {

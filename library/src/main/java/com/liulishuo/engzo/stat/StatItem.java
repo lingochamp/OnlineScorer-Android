@@ -12,12 +12,12 @@ import org.json.JSONObject;
  * specific subclass.
  *
  * In order to let this class become easy-to-use, some abstract methods are defined.
- * Pay attention to the "onStatCome" method, because every subclass needs to collect state only
+ * Pay attention to the "collectStatPoint" method, because every subclass needs to collect state only
  * it concerned, I must use many subclasses in one class, such as
  * {@link com.liulishuo.engzo.onlinescorer.OnlineScorerRecorder}.
  * without this method, I need to use "instanceof" everywhere, which is terrible. But with
  *
- * @see #onStatCome(String, String)
+ * @see #collectStatPoint(String, String)
  * , I do not need to know specific subclass. Maybe you worry about there is not only String value
  * needs to be collected, but int or long ... need to be collected. Just take it easy, they all can
  * be
@@ -33,8 +33,6 @@ public abstract class StatItem {
 
     public abstract JSONObject toJson();
 
-    public abstract StatItem fromJson(JSONObject item);
-
-    public abstract void onStatCome(String name, String value);
+    public abstract void collectStatPoint(String name, String value);
 
 }
