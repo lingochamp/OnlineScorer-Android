@@ -1,4 +1,0 @@
-test user name : test
-test password  : test
-test api       : wss://rating.llsstaging.com/openapi/stream/upload
-product api    : wss://openapi.llsapp.com/openapi/stream/upload
