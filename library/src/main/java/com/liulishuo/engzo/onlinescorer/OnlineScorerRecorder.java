@@ -114,7 +114,10 @@ public class OnlineScorerRecorder {
             public void onRecordStop(Throwable throwable,
                     Result result) {
                 if (onRecordListener != null) {
-                    onRecordListener.onRecordStop(throwable);
+                    final OnlineScorerRecorder.Result recorderResult = new OnlineScorerRecorder
+                            .Result();
+                    recorderResult.durationInMills = result.getDurationInMills();
+                    onRecordListener.onRecordStop(throwable, recorderResult);
                     statItem.collectStatPoint("recordEndTime",
                             String.valueOf(System.currentTimeMillis()));
                     if (throwable == null) {
@@ -187,7 +190,7 @@ public class OnlineScorerRecorder {
     }
 
     public interface OnRecordListener {
-        void onRecordStop(Throwable error);
+        void onRecordStop(Throwable error, Result result);
     }
 
     public interface OnProcessStopListener {
@@ -230,6 +233,13 @@ public class OnlineScorerRecorder {
 
         public String getMsg() {
             return msg;
+        }
+    }
+
+    public static class Result {
+        private long durationInMills;
+        public long getDurationInMills() {
+            return durationInMills;
         }
     }
 

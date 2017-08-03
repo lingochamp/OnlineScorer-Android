@@ -65,7 +65,7 @@ public class DemoActivity extends AppCompatActivity {
         // 录音完成的回调，开发者可以用这个监听录音的完成，在里头一般做更新录音按钮状态的操作
         onlineScorerRecorder.setOnRecordStopListener(new OnlineScorerRecorder.OnRecordListener() {
             @Override
-            public void onRecordStop(Throwable error) {
+            public void onRecordStop(Throwable error, OnlineScorerRecorder.Result result) {
                 if (error != null) {
                     Toast.makeText(DemoActivity.this, "录音出错\n" + Log.getStackTraceString(error),
                             Toast.LENGTH_SHORT).show();
