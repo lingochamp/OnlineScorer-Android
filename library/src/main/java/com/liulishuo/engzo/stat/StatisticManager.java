@@ -78,7 +78,7 @@ public class StatisticManager {
     }
 
     public void init(Context context) {
-        File cacheDir = context.getExternalCacheDir();
+        File cacheDir = Utility.getExternalCacheDir(context);
         if (cacheDir == null || cacheDir.listFiles() == null) {
             cacheDir = context.getCacheDir();
         }

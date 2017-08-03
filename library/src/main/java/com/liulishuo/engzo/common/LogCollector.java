@@ -97,7 +97,7 @@ public final class LogCollector {
     public void initLog(Context context) {
         if (mLogDir != null && mLogDir.exists()) return;
 
-        File cacheDir = context.getExternalCacheDir();
+        File cacheDir = Utility.getExternalCacheDir(context);
         if (cacheDir == null || cacheDir.listFiles() == null) {
             cacheDir = context.getCacheDir();
         }

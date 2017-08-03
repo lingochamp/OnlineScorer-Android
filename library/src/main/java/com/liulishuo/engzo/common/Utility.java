@@ -1,5 +1,11 @@
 package com.liulishuo.engzo.common;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.support.v4.content.PermissionChecker;
+
+import java.io.File;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
@@ -48,5 +54,12 @@ public class Utility {
             e.printStackTrace();
         }
         return "";
+    }
+
+    public static File getExternalCacheDir(final Context context) {
+        if (PermissionChecker.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            return null;
+        }
+        return context.getExternalCacheDir();
     }
 }

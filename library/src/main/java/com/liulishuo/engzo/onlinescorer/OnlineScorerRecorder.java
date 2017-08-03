@@ -59,6 +59,8 @@ public class OnlineScorerRecorder {
                     String filePath = wavProcessor.getFilePath();
                     String message = onlineScorerProcessor.getMessage();
 
+                    LogCollector.get().d("process stop, filePath is " + filePath + ", message is null:" + (message == null));
+
                     if (throwable == null) {
                         try {
                             JSONObject jsonObject = new JSONObject(message);
@@ -91,7 +93,7 @@ public class OnlineScorerRecorder {
                         onProcessStopListener.onProcessStop(throwable, filePath, null);
                         if (throwable instanceof WebSocketException) {
                             WebSocketException webSocketException = (WebSocketException) throwable;
-                            statItem.collectStatPoint("errorCode", webSocketException.getError().name());
+                            statItem.collectStatPoint("errorCode", "websocket:" + webSocketException.getMessage());
                         } else {
                             statItem.collectStatPoint("errorCode", "lingo:" + throwable.getMessage());
                         }

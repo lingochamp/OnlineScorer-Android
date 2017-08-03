@@ -62,13 +62,14 @@ class OnlineScorerProcessor implements AudioProcessor {
         }
     }
 
-    public void setAudioId(String audioId) {
+    void setAudioId(String audioId) {
         this.audioId = audioId;
     }
 
     @Override
     public void start() throws Exception {
         socketError = false;
+        message = null;
 
         if (encodeToSpeex) {
             encoder = new SpeexEncoder();
@@ -167,10 +168,10 @@ class OnlineScorerProcessor implements AudioProcessor {
                     public void onBinaryFrame(WebSocket websocket, WebSocketFrame frame) throws Exception {
                         super.onBinaryFrame(websocket, frame);
                         byte[] bytes = frame.getPayload();
-
                         if (bytes != null && bytes.length > 4) {
                             OnlineScorerProcessor.this.message = new String(bytes, 4, bytes.length - 4);
                         }
+                        LogCollector.get().d("online processor onBinaryFrame, parse message is " + OnlineScorerProcessor.this.message);
                         latch.countDown();
                     }
 
