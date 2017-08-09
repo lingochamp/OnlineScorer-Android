@@ -15,29 +15,6 @@ compile('com.liulishuo.engzo:online-scorer:1.1.1@aar') {
     transitive = true
 }
 
-// snapshot aar deploy on oss.jfrog.org
-
-// PROJECT_ROOT/build.gradle
-allprojects {
-    repositories {
-        jcenter()
-        maven { url 'https://oss.jfrog.org/artifactory/libs-snapshot/' }
-    }
-}
-
-// PROJECT_ROOT/demo/build.gradle
-configurations.all {
-    // check for updates every build
-    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-}
-
-dependencies {
-    compile ('com.liulishuo.engzo:online-scorer:1.1.0-SNAPSHOT@aar') {
-        transitive = true
-        changing = true
-    }
-}
-
 ```
 
 ## api level 支持
@@ -46,10 +23,16 @@ min api level 15
 
 ## 权限要求
 
+### Normal Permissions
 ```
-
-<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+```
+### Dangerous Permissions
+```
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
 ```
 
 当 targetSdkVersion 为 23 的时候需要开发者手动处理 runtime permission，否则会造成异常
@@ -77,6 +60,22 @@ defaultConfig {
 
 # 基本使用
 
+## 初始化
+请先在 Application 里进行初始化操作：
+```
+public class DemoApp extends Application {
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        OnlineScorer.init(this, "test", "test");
+        OnlineScorer.setDebugEnable(true);
+    }
+
+}
+```
+
+## 使用示例
 ```
 
 
@@ -84,57 +83,51 @@ defaultConfig {
 ReadLoudExercise readLoudExercise = new ReadLoudExercise();
 readLoudExercise.setReftext("i will study english very hard");
 // 并且指定音频质量为8，该参数只影响传输给服务端的音频质量，不影响本地录音文件
-readLoudExercise.setQuality(8);
+readLoudExercise.setQuality(8);  
 
 // 创建打分录音器
-final OnlineScorerRecorder onlineScorerRecorder = new OnlineScorerRecorder(appId, appSecret, readLoudExercise, "/sdcard/test.wav");
+final OnlineScorerRecorder onlineScorerRecorder = new OnlineScorerRecorder(readLoudExercise, "/sdcard/test.wav");
 
-// OnRecordListener 与 OnProcessStopListener 开始录音后保证成对出现，但是不保证两方回调顺序
-
+// OnRecordListener 与 OnProcessStopListener 开始录音后保证成对出现，且 OnProcessStopListener 的回调在 OnRecordListener 的回调之后。
 // 录音完成的回调，开发者可以用这个监听录音的完成，在里头一般做更新录音按钮状态的操作
 onlineScorerRecorder.setOnRecordStopListener(new OnlineScorerRecorder.OnRecordListener() {
     @Override
-    public void onRecordStop(Throwable error) {
-        if (error != null) {
-            Toast.makeText(DemoActivity.this, "录音出错\n" + Log.getStackTraceString(error),
-                    Toast.LENGTH_SHORT).show();
-        }
-        recordBtn.setText("start");
+    public void onRecordStop(Throwable error, OnlineScorerRecorder.Result result) {
+        //result里面可以获取录音时长
     }
-});
+});    
 
 // 录音处理完成的回调，开发者可以监听该回调，获取打分报告与录音文件
 onlineScorerRecorder.setOnProcessStopListener(new OnlineScorerRecorder.OnProcessStopListener() {
     @Override
     public void onProcessStop(Throwable error, String filePath, String report) {
-        //
-        if (error != null) {
-            resultView.setText(Log.getStackTraceString(error));
-        } else{
-            resultView.setText(String.format("filePath = %s\n report = %s", filePath, report));
-        }
+        
     }
-});
+});  
 
-recordBtn.setOnClickListener(new View.OnClickListener() {
-    @Override
-    public void onClick(View v) {
-        // isAvailable 为 false 为录音正在处理时，需要保护避免在这个时候操作录音器
-        if (onlineScorerRecorder.isAvailable()) {
-            if (onlineScorerRecorder.isRecording()) {
-                onlineScorerRecorder.stopRecord();
-            } else {
-                // need get permission
-                onlineScorerRecorder.startRecord();
-                resultView.setText("");
-                recordBtn.setText("stop");
-            }
-        }
-    }
-});
+
+//开始录音打分
+onlineScorerRecorder.startRecord();
+//结束录音打分
+onlineScorerRecorder.stopRecord();
 
 ```
 
+### 开启调试
+开启调试只需要调用 `OnlineScorer.setDebugEnable(true);` 即可，建议在 Application 中开启，类似 Demo 中的做法。
+
+### 查看日志
+开启调试后，可以在控制台过滤 `OnlineScorerRecorder` ,也可以在 OnProcessStopListener 接口返回时获取日志文件的目录:
+```
+ OnlineScorer.requestLogDir(
+                         new RequestLogCallback() {
+                             @Override
+                             public void onDirResponse(@Nullable File logDir) {
+                                 
+                             }
+                         });
+                             
+```
 # 异常处理
 
 ## onRecordStop
@@ -150,8 +143,9 @@ recordBtn.setOnClickListener(new View.OnClickListener() {
 ```
 
 /**
- * 0 - 成功
+ * 2 - 客户端 网络数据传输错误
  * 1 - 客户端 response timeout
+ * 0 - 成功
  * -1 - 参数有误
  * -20 - 认证失败
  * -30 - 请求过于频繁
