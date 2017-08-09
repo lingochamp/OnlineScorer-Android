@@ -13,7 +13,7 @@ public class DemoApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        OnlineScorer.init(this, "test", "test");
+        OnlineScorer.init(this, "", "");
         OnlineScorer.setDebugEnable(true);
     }
 

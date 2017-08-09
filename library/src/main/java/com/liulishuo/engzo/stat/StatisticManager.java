@@ -1,9 +1,7 @@
 package com.liulishuo.engzo.stat;
 
-import android.Manifest;
 import android.content.Context;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 
 import com.liulishuo.engzo.common.InnerExecutors;
 import com.liulishuo.engzo.common.LogCollector;
@@ -140,7 +138,7 @@ public class StatisticManager {
         private final List<UploadStatItem> mFailUploadStatItems;
         private final int MAX_CONTINUOUS_UPLOAD_LIMITS = 5;
         private final long mMinUploadTimeInterval = 5 * 60 * 1000;
-        private final String URL = "https://rating.llsstaging.com/stat";
+        private final String URL = "https://openapi.llsapp.com/stat";
 
         private long mLastUploadTime = System.currentTimeMillis();
 
@@ -403,6 +401,7 @@ public class StatisticManager {
                                 }
                             }
                         }
+                        mFailUploadStatItems.clear();
                     }
                 }
             });
