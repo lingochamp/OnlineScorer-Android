@@ -1,6 +1,7 @@
 package com.liulishuo.engzo.onlinescorer;
 
 import android.app.Application;
+import android.content.Context;
 import android.provider.Settings;
 
 /**
@@ -32,9 +33,9 @@ public final class Config {
         return Holder.CONFIG;
     }
 
-    void init(Application application, String appId, String appSecret) {
+    void init(Context context, String appId, String appSecret) {
         try {
-            deviceId = Settings.Secure.getString(application.getContentResolver(),
+            deviceId = Settings.Secure.getString(context.getContentResolver(),
                     Settings.Secure.ANDROID_ID);
         } catch (Exception e) {
             deviceId = "0-0";

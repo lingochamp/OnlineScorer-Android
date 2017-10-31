@@ -18,6 +18,11 @@ import java.util.List;
 public class OnlineScorer {
 
     public static void init(Application application, String appId, String secretId) {
+        init(application, appId, secretId, "wss://openapi.llsapp.com/openapi/stream/upload");
+    }
+
+    public static void init(Application application, String appId, String secretId, String apiUrl) {
+        OnlineScorerProcessor.SERVER = apiUrl;
         Config.get().init(application, appId, secretId);
         StatisticManager.get().init(application);
         LogCollector.get().initLog(application);
