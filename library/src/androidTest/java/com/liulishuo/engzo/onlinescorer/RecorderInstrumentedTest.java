@@ -3,6 +3,7 @@ package com.liulishuo.engzo.onlinescorer;
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
+import android.test.RenamingDelegatingContext;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -16,22 +17,23 @@ import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.assertNotNull;
 
+import com.liulishuo.engzo.stat.StatisticManager;
+
 @RunWith(AndroidJUnit4.class)
 public class RecorderInstrumentedTest {
 
-    private String appId;
-    private String appSecret;
     private ReadLoudExercise readLoudExercise;
 
     @Before
     public void setup() {
-        // 仅供测试用的 appId 和 appSecret
-        appId = "test2";
-        appSecret = "test2";
+        Config.get().init(InstrumentationRegistry.getTargetContext(), "test2", "test2");
+        OnlineScorerProcessor.SERVER = "wss://rating.llsstaging.com/openapi/stream/upload";
+        StatisticManager.get().init(InstrumentationRegistry.getTargetContext());
 
         // 创建 "i will study english very hard" 这句话的练习
         readLoudExercise = new ReadLoudExercise();
         readLoudExercise.setReftext("i will study english very hard");
+        readLoudExercise.setTargetAudience(3);
         // 并且指定音频质量为8，该参数只影响传输给服务端的音频质量，不影响本地录音文件
         readLoudExercise.setQuality(8);
     }
@@ -61,10 +63,10 @@ public class RecorderInstrumentedTest {
 
 
         OnlineScorerRecorder onlineScorerRecorderA =
-                new OnlineScorerRecorder(appId, appSecret, readLoudExercise,
+                new OnlineScorerRecorder(readLoudExercise,
                         new File(appContext.getCacheDir(), "temp.wav").getPath());
         OnlineScorerRecorder onlineScorerRecorderB =
-                new OnlineScorerRecorder(appId, appSecret, readLoudExercise,
+                new OnlineScorerRecorder(readLoudExercise,
                         new File(appContext.getCacheDir(), "temp2.wav").getPath());
 
         onlineScorerRecorderA.startRecord(testFilePath);

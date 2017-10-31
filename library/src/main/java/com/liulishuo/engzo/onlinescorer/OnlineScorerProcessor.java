@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 class OnlineScorerProcessor implements AudioProcessor {
 
-    private static final String SERVER = "wss://openapi.llsapp.com/openapi/stream/upload";
+    public static String SERVER = "wss://openapi.llsapp.com/openapi/stream/upload";
 
     /**
      * The timeout value in milliseconds for socket connection.
@@ -42,7 +42,7 @@ class OnlineScorerProcessor implements AudioProcessor {
 
     private String message;
 
-    private CountDownLatch latch = new CountDownLatch(1);
+    private CountDownLatch latch;
 
     private boolean encodeToSpeex = false;
 
@@ -54,6 +54,10 @@ class OnlineScorerProcessor implements AudioProcessor {
     private SpeexEncoder encoder;
     private int frameSize;
     private long pointer;
+
+    private byte[] leftBytes;
+    private int leftSize;
+    private int frameByteSize;
 
     OnlineScorerProcessor(BaseExercise exercise) {
         this.exercise = exercise;
@@ -70,11 +74,16 @@ class OnlineScorerProcessor implements AudioProcessor {
     public void start() throws Exception {
         socketError = false;
         message = null;
+        latch = new CountDownLatch(1);
 
         if (encodeToSpeex) {
             encoder = new SpeexEncoder();
             pointer = encoder.init(exercise.getQuality());
             frameSize = encoder.getFrameSize(pointer);
+
+            frameByteSize = frameSize * 2;
+            leftBytes = new byte[frameByteSize];
+            leftSize = 0;
         }
         ws = connect();
         meta = generateMeta(audioId, exercise);
@@ -90,9 +99,29 @@ class OnlineScorerProcessor implements AudioProcessor {
     public void flow(byte[] bytes, int size) throws Exception {
         if (ws != null) {
             if (encodeToSpeex) {
-                ByteBuffer buffer = ByteBuffer.wrap(bytes);
+
+                if (leftSize > 0) {
+                    byte[] temp = getBytes(size + leftSize);
+                    System.arraycopy(leftBytes, 0, temp, 0, leftSize);
+                    System.arraycopy(bytes, 0, temp, leftSize, size);
+
+                    size += leftSize;
+                    bytes = temp;
+                    leftSize = 0;
+                }
+
+                if (size > frameByteSize) {
+                    int encodeSize = size / frameByteSize * frameByteSize;
+                    leftSize = size - encodeSize;
+                    System.arraycopy(bytes, encodeSize, leftBytes, 0, leftSize);
+                    size = encodeSize;
+                }
+
+                ByteBuffer buffer = ByteBuffer.wrap(bytes, 0, size);
+
                 short[] buf = new short[size / 2];
                 buffer.order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(buf);
+
                 bytes = encoder.encode(pointer, frameSize, buf.length, buf);
             }
             ws.sendBinary(bytes);
@@ -200,5 +229,16 @@ class OnlineScorerProcessor implements AudioProcessor {
                     e);
         }
         return meta;
+    }
+
+    private byte[] bytesPool;
+
+    private byte[] getBytes(int size) {
+        if (bytesPool == null) {
+            bytesPool = new byte[size];
+        } else if (bytesPool.length < size){
+            bytesPool = new byte[size];
+        }
+        return bytesPool;
     }
 }
