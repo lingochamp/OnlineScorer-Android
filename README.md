@@ -11,7 +11,7 @@ Android 版在线打分 sdk 支持对 readLoud 题型进行打分，录音过程
 
 ```
 // release aar deploy on jcenter
-compile('com.liulishuo.engzo:online-scorer:1.1.1@aar') {
+compile('com.liulishuo.engzo:online-scorer:1.1.2@aar') {
     transitive = true
 }
 
