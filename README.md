@@ -272,4 +272,14 @@ public static class ScorerException extends Exception {
 ```
 
 
+## ChangeLog
+
+### 1.1.2
+
+1. 修复 SpeexEncoder 调用错误
+2. 修复了 start 中未初始化话 CountDownLatch 导致而后打分失败的问题
+3. ReadLoudExercise 添加 targetAudience 字段
+4. OnlineScorer.init 支持对 url 的注入
+
+
 

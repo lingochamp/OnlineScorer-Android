@@ -11,6 +11,8 @@ public class ReadLoudExercise extends BaseExercise {
 
     private String reftext;
 
+    private int targetAudience;
+
     public ReadLoudExercise() {
         setType("readaloud");
     }
@@ -23,6 +25,17 @@ public class ReadLoudExercise extends BaseExercise {
         this.reftext = reftext;
     }
 
+    public int getTargetAudience() {
+        return targetAudience;
+    }
+
+    public void setTargetAudience(int targetAudience) {
+        if (targetAudience < 0 || targetAudience > 1) {
+            throw new IllegalArgumentException("illegal targetAudience only support 0(adult) or 1(child)");
+        }
+        this.targetAudience = targetAudience;
+    }
+
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject = null;
@@ -31,6 +44,7 @@ public class ReadLoudExercise extends BaseExercise {
             jsonObject.put("type", getType());
             jsonObject.put("quality", getQuality());
             jsonObject.put("reftext", getReftext());
+            jsonObject.put("targetAudience", getTargetAudience());
         } catch (JSONException e) {
             e.printStackTrace();
         }
