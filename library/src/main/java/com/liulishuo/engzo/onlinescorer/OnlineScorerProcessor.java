@@ -42,7 +42,7 @@ class OnlineScorerProcessor implements AudioProcessor {
 
     private String message;
 
-    private CountDownLatch latch = new CountDownLatch(1);
+    private CountDownLatch latch;
 
     private boolean encodeToSpeex = false;
 
@@ -70,6 +70,7 @@ class OnlineScorerProcessor implements AudioProcessor {
     public void start() throws Exception {
         socketError = false;
         message = null;
+        latch = new CountDownLatch(1);
 
         if (encodeToSpeex) {
             encoder = new SpeexEncoder();
