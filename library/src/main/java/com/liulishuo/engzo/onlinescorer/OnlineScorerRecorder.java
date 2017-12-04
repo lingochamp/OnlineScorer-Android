@@ -170,6 +170,10 @@ public class OnlineScorerRecorder {
         LogCollector.get().d("stop record, available: " + available);
     }
 
+    public void cancel() {
+        lingoRecorder.cancel();
+    }
+
     public boolean isRecording() {
         return lingoRecorder.isRecording();
     }
@@ -187,6 +191,22 @@ public class OnlineScorerRecorder {
 
     public void setOnProcessStopListener(OnProcessStopListener onProcessStopListener) {
         this.onProcessStopListener = onProcessStopListener;
+    }
+
+    public int getConnectTimeoutMillis() {
+        return onlineScorerProcessor.getConnectTimeoutMillis();
+    }
+
+    public void setConnectTimeoutMillis(int connectTimeoutMillis) {
+        onlineScorerProcessor.setConnectTimeoutMillis(connectTimeoutMillis);
+    }
+
+    public int getResponseTimeoutMillis() {
+        return onlineScorerProcessor.getResponseTimeoutMillis();
+    }
+
+    public void setResponseTimeoutMillis(int responseTimeoutMillis) {
+        onlineScorerProcessor.setResponseTimeoutMillis(responseTimeoutMillis);
     }
 
     public interface OnRecordListener {
