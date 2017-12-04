@@ -170,6 +170,10 @@ public class OnlineScorerRecorder {
         LogCollector.get().d("stop record, available: " + available);
     }
 
+    public void cancel() {
+        lingoRecorder.cancel();
+    }
+
     public boolean isRecording() {
         return lingoRecorder.isRecording();
     }
