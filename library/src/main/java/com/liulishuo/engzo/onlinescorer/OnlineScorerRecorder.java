@@ -189,6 +189,22 @@ public class OnlineScorerRecorder {
         this.onProcessStopListener = onProcessStopListener;
     }
 
+    public int getConnectTimeoutMillis() {
+        return onlineScorerProcessor.getConnectTimeoutMillis();
+    }
+
+    public void setConnectTimeoutMillis(int connectTimeoutMillis) {
+        onlineScorerProcessor.setConnectTimeoutMillis(connectTimeoutMillis);
+    }
+
+    public int getResponseTimeoutMillis() {
+        return onlineScorerProcessor.getResponseTimeoutMillis();
+    }
+
+    public void setResponseTimeoutMillis(int responseTimeoutMillis) {
+        onlineScorerProcessor.setResponseTimeoutMillis(responseTimeoutMillis);
+    }
+
     public interface OnRecordListener {
         void onRecordStop(Throwable error, Result result);
     }

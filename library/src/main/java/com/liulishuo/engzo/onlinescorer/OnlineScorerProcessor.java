@@ -31,11 +31,6 @@ class OnlineScorerProcessor implements AudioProcessor {
 
     public static String SERVER = "wss://openapi.llsapp.com/openapi/stream/upload";
 
-    /**
-     * The timeout value in milliseconds for socket connection.
-     */
-    private static final int TIMEOUT = 5000;
-
     private WebSocket ws;
 
     private String meta;
@@ -58,6 +53,9 @@ class OnlineScorerProcessor implements AudioProcessor {
     private byte[] leftBytes;
     private int leftSize;
     private int frameByteSize;
+
+    private int connectTimeoutMillis = 5000;
+    private int responseTimeoutMillis = 15000;
 
     OnlineScorerProcessor(BaseExercise exercise) {
         this.exercise = exercise;
@@ -142,7 +140,7 @@ class OnlineScorerProcessor implements AudioProcessor {
             ws.sendBinary(close);
             LogCollector.get().d(
                     "end online processor to send eos frame and wait until success.");
-            boolean success = latch.await(15, TimeUnit.SECONDS);
+            boolean success = latch.await(responseTimeoutMillis, TimeUnit.MILLISECONDS);
             if (!success) {
                 LogCollector.get().d("end online processor, eos frame response timeout.");
                 throw new OnlineScorerRecorder.ScorerException(1, "response timeout");
@@ -169,13 +167,29 @@ class OnlineScorerProcessor implements AudioProcessor {
         }
     }
 
+    public int getConnectTimeoutMillis() {
+        return connectTimeoutMillis;
+    }
+
+    public void setConnectTimeoutMillis(int connectTimeoutMillis) {
+        this.connectTimeoutMillis = connectTimeoutMillis;
+    }
+
+    public int getResponseTimeoutMillis() {
+        return responseTimeoutMillis;
+    }
+
+    public void setResponseTimeoutMillis(int responseTimeoutMillis) {
+        this.responseTimeoutMillis = responseTimeoutMillis;
+    }
+
     public String getMessage() {
         return message;
     }
 
     private WebSocket connect() throws IOException, WebSocketException {
         return new WebSocketFactory()
-                .setConnectionTimeout(TIMEOUT)
+                .setConnectionTimeout(connectTimeoutMillis)
                 .createSocket(SERVER)
                 .addListener(new WebSocketAdapter() {
 
