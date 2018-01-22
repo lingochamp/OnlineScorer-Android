@@ -38,7 +38,7 @@ public class DemoActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        onlineScorerRecorder.stopRecord();
+        onlineScorerRecorder.cancel();
     }
 
     @Override
@@ -61,6 +61,9 @@ public class DemoActivity extends AppCompatActivity {
 
         // 创建打分录音器
         onlineScorerRecorder = new OnlineScorerRecorder(readLoudExercise, "/sdcard/test.wav");
+
+        onlineScorerRecorder.setConnectTimeoutMillis(1000);
+        onlineScorerRecorder.setResponseTimeoutMillis(5000);
 
         // 录音完成的回调，开发者可以用这个监听录音的完成，在里头一般做更新录音按钮状态的操作
         onlineScorerRecorder.setOnRecordStopListener(new OnlineScorerRecorder.OnRecordListener() {

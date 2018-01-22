@@ -281,5 +281,10 @@ public static class ScorerException extends Exception {
 3. ReadLoudExercise 添加 targetAudience 字段
 4. OnlineScorer.init 支持对 url 的注入
 
+### 1.2.0
+
+1. 添加 cancel 接口，支持打分录音时取消操作
+2. 添加 setConnectTimeoutMillis 与 setResponseTimeoutMillis 接口可以配置打分时连接超时与响应超时时间。 
+
 
 
